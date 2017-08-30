@@ -2,9 +2,7 @@
 
 use Bigly\Dropship\Framework\Route;
 
-Route::get('credentials', 'CredentialController@index')
-    ->icon('settings')->name('Manage Credential')->title('Manage');
-
-Route::post('credentials', 'CredentialController@store');
+Route::ajax('store-credential', 'CredentialController@store');
+Route::ajax('sync', 'CredentialController@synProducts');
 
 Route::register();

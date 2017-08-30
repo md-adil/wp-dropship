@@ -5,8 +5,9 @@ namespace Bigly\Dropship\Controllers;
 class Controller
 {
     protected static $instances = [];
-    protected function view($path)
+    protected function view($path, $args = [])
     {
+        extract($args);
         require_once(__DIR__ . '/../views/' . $path);
     }
 

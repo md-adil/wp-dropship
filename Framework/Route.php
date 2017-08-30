@@ -4,6 +4,8 @@ namespace Bigly\Dropship\Framework;
 class Route
 {
     protected static $routers = [];
+    const ROUTE_PREFIX = 'biglydropship';
+    const CONTROLLER_PREFIX = '\Bigly\Dropship\Controllers';
 
     protected static function map($method, $pattern, $controller)
     {
@@ -32,6 +34,21 @@ class Route
                 );
             }
         });
+    }
+
+    public static function ajax($pattern, $controller)
+    {
+        $action = static::resolveControllerAction($controller);
+        add_action('wp_ajax_' . self::ROUTE_PREFIX . '_' . $pattern, $action);
+    }
+
+    protected static function resolveControllerAction($controllerAction)
+    {
+        list($controller, $action) = explode('@', $controllerAction);
+        return [
+            call_user_func([static::CONTROLLER_PREFIX . '\\' . $controller, 'getInstance']),
+            $action
+        ];
     }
 
     public static function __callStatic($name, $args)

@@ -1,4 +1,10 @@
 <?php
+use Bigly\Dropship\Framework\App;
+use Bigly\Dropship\Framework\Container;
+use Bigly\Dropship\Config;
+use Bigly\Dropship\Activator;
+use Bigly\Dropship\Deactivator;
+
 /**
  * Plugin Name: Bigly Dropship
  * Plugin URI: dropship.biglytech.net
@@ -8,61 +14,54 @@
  */
 
 spl_autoload_register(function ($class) {
-    // project-specific namespace prefix
     $prefix = 'Bigly\\Dropship\\';
-
-    // base directory for the namespace prefix
     $base_dir = __DIR__ . '/';
-
-    // does the class use the namespace prefix?
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
-        // no, move to the next registered autoloader
         return;
     }
-
-    // get the relative class name
     $relative_class = substr($class, $len);
-    
-    // replace the namespace prefix with the base directory, replace namespace
-    // separators with directory separators in the relative class name, append
-    // with .php
     $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-    // if the file exists, require it
     if (file_exists($file)) {
         require $file;
     }
 });
 
+require(__DIR__ . '/actions.php');
 require(__DIR__ . '/routes.php');
 
-register_activation_hook(__FILE__, 'bigly_dropship_activating');
-register_deactivation_hook(__FILE__, 'bigly_dropship_deactivating');
-register_uninstall_hook(__FILE__, 'bigly_dropship_uninstall');
+require(__DIR__ . '/process/activate.php');
+require(__DIR__ . '/process/deactivate.php');
 
-// add_action('init', function () {
-//     add_menu_page('Bigly Dropship Configuration', 'Bigly');
-// });
-// require_once(__DIR__ . '/controllers/CredentialController.php');
+function run_biglydropship()
+{
+    global $wpdb;
+    $remoteBaseUrl = 'http://dropship.dev';
+    $configs = [
+        'tables' => [
+            'product' => $wpdb->prefix . 'bds_product_map',
+            'category' => $wpdb->prefix . 'bds_category_map'
+        ],
 
-// function biglydropship_manage_credentials()
-// {
-//     $controller = new CredentialController();
-//     $controller->index();
-// }
+        'prefix' => [
+        ],
 
-// function biglydropship_addmenu()
-// {
-//     $controller = new CredentialController();
-//     add_menu_page(
-//         'Bigly Dropship',
-//         'Bigly Dropship',
-//         'manage_options',
-//         'bigly-dropship-credentials',
-//         [$controller, 'index'],
-//         plugin_dir_url(__FILE__) . 'images/icon_wporg.png',
-//         20
-//     );
-// }
-// add_action('admin_menu', 'biglydropship_addmenu');
+        'paths' => [
+            'base' => __FILE__
+        ],
+
+        'remote' => [
+            'sync' => $remoteBaseUrl . '/api/sync',
+            'authorize' => $remoteBaseUrl . '/oauth/authorize',
+            'access_token' => $remoteBaseUrl . '/oauth/tokens'
+        ],
+    ];
+
+
+    Config::set($configs);
+
+    $activator = new Activator(__FILE__);
+    $deactivator = new Deactivator(__FILE__);
+}
+
+run_biglydropship();
