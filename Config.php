@@ -5,8 +5,6 @@ class Config
 {
     protected static $configs = [];
 
-   
-
     public static function get($key, $default = null)
     {
         $array = self::$configs;
@@ -25,7 +23,6 @@ class Config
                 return value($default);
             }
         }
-
         return $array;
     }
 
@@ -43,7 +40,6 @@ class Config
 
         while (count($keys) > 1) {
             $key = array_shift($keys);
-
             // If the key doesn't exist at this depth, we will just create an empty array
             // to hold the next value, allowing us to create the arrays to hold final
             // values at the correct depth. Then we'll keep digging into the array.

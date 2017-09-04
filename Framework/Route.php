@@ -4,7 +4,7 @@ namespace Bigly\Dropship\Framework;
 class Route
 {
     protected static $routers = [];
-    const ROUTE_PREFIX = 'biglydropship';
+    const ROUTE_PREFIX = 'blds';
     const CONTROLLER_PREFIX = '\Bigly\Dropship\Controllers';
 
     protected static function map($method, $pattern, $controller)

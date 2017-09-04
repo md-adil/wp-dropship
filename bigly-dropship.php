@@ -26,40 +26,24 @@ spl_autoload_register(function ($class) {
         require $file;
     }
 });
-
+// Includes
+require(__DIR__ . '/includes/functions.php');
 require(__DIR__ . '/actions.php');
 require(__DIR__ . '/routes.php');
 
 require(__DIR__ . '/process/activate.php');
 require(__DIR__ . '/process/deactivate.php');
 
+
+
 function run_biglydropship()
 {
     global $wpdb;
-    $remoteBaseUrl = 'http://dropship.dev';
-    $configs = [
-        'tables' => [
-            'product' => $wpdb->prefix . 'bds_product_map',
-            'category' => $wpdb->prefix . 'bds_category_map'
-        ],
-
-        'prefix' => [
-        ],
-
-        'paths' => [
-            'base' => __FILE__
-        ],
-
-        'remote' => [
-            'sync' => $remoteBaseUrl . '/api/sync',
-            'authorize' => $remoteBaseUrl . '/oauth/authorize',
-            'access_token' => $remoteBaseUrl . '/oauth/tokens'
-        ],
-    ];
-
-
-    Config::set($configs);
-
+    $config = require(__DIR__ . '/configs/config.php');
+    if(file_exists(__DIR__ . '/configs/config.local.php')) {
+        $config = array_replace_recursive($config, require(__DIR__ . '/configs/config.local.php'));
+    }
+    Config::set($config);
     $activator = new Activator(__FILE__);
     $deactivator = new Deactivator(__FILE__);
 }
