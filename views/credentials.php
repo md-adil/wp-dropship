@@ -27,7 +27,7 @@ require(__DIR__ . '/../includes/header.php');
 				<tr>
 					<td>Secret Key</td>
 					<td>
-						<input type="text" name="secret_key" placeholder="Secret key">
+						<input type="text" name="client_secret" placeholder="Secret key">
 					</td>
 				</tr>
 				<tr>
@@ -48,6 +48,10 @@ require(__DIR__ . '/../includes/header.php');
 						<button type="submit" class="button button-primary">Get Access Token</button>
 					</td>
 				</tr>
+				<tr class="error-box">
+					<td></td>
+					<td width="800" class="error-message"></td>
+				</tr>
 			</tbody>
 		</table>
 	</form>
@@ -62,7 +66,12 @@ require(__DIR__ . '/../includes/header.php');
 			console.log('Submitting');
 			$.post('admin-ajax.php', $(this).serialize(), function(res) {
 				btn.removeClass('blds-preloader');
-				console.log(res);
+				if(res.status == 'fail') {
+					$('.error-box').find('.error-message').text(res.message);
+				} else {
+					alert('Authorization key has been updated, sync the products');
+					$('.error-box').find('.error-message').text('');
+				}
 			});		
 		})
 	})(jQuery)

@@ -3,6 +3,7 @@ namespace Bigly\Dropship\Controllers;
 
 function mainMenu()
 {
+	require(__DIR__ . '/views/home.php');
 }
 
 function credentials()

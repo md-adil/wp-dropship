@@ -13,6 +13,7 @@ class CredentialController extends Controller
 
     public function getAccessToken()
     {
+        $optionkey = Config::get('options.access_token');
         $tokenUrl = Config::get('remote.base') . '/' . Config::get('remote.access_token');
         $res = wp_remote_post($tokenUrl, [
             'body' => [
@@ -25,20 +26,27 @@ class CredentialController extends Controller
         ]);
         $res = json_decode($res['body']);
         if($res->error) {
-            wp_send_json($res->error);
+            wp_send_json([
+                'status' => 'fail',
+                'message' => $res->message,
+                'data' => $_POST
+            ]);
         } else {
-
+            $token = $res->access_token;
+            if($token) {
+                update_option($optionkey, $token);
+                wp_send_json([
+                    'status' => 'ok',
+                    'message' => 'Status has been updated.'
+                ]);
+            } else {
+                wp_send_json([
+                    'status' => 'fail',
+                    'Invalid response found, please contact service provider'
+                ]);
+            }
         }
     }
 
-    public function storeToken() {
-        
-    }
-
-    public function syncProducts()
-    {
-        wp_remote_get('', [
-            
-        ]);
-    }
+   
 }

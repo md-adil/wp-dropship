@@ -39,7 +39,12 @@ class Route
     public static function ajax($pattern, $controller)
     {
         $action = static::resolveControllerAction($controller);
-        add_action('wp_ajax_' . self::ROUTE_PREFIX . '_' . $pattern, $action);
+        add_action('wp_ajax_' . self::ROUTE_PREFIX . '_' . $pattern, function() use($action) {
+            $res = call_user_func($action);
+            if($res !== null) {
+                wp_send_json($res);
+            }
+        });
     }
 
     protected static function resolveControllerAction($controllerAction)
