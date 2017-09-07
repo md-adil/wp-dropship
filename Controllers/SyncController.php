@@ -46,12 +46,66 @@ class SyncController extends Controller
 		}
 
 		foreach($categories as $category) {
-			$term = wp_insert_term($category->name, 'product_cat', [
-				'description' => $category->description,
-				'parent' => $this->getCategoryParent($category)
-			]);
-			return $this->insertCategoryMapping($category, $term);
+			switch ($category->action) {
+				case 'create':
+					$this->createCategory($category);
+					break;
+				case 'update':
+					$this->updateCategory($category);
+					break;
+				case 'delete':
+					$this->deleteCategory($category);
+					break;
+				
+				default:
+					# code...
+					break;
+			}
 		}
+	}
+
+	protected function createCategory($category) {
+		$parentId;
+		if($category->parent_id) {
+			$parentId = $this->getTermId($category->parent_id);
+		}
+		$term = wp_insert_term($category->name, 'product_cat', [
+			'description' => $category->description,
+			'parent' => $parentId ?: 0
+		]);
+		return $this->insertCategoryMapping($category, $term);
+	}
+
+	protected function updateCategory($category) {
+		$termId = $this->getTermId($category->id);
+		if(!$termId) {
+			$this->createCategory($category);
+		}
+		$parentId = null;
+		if($category->parent_id) {
+			$parentId = $this->getTermId($category->parent_id);
+		}
+
+		$data = [
+			'name' => $category->name,
+			'description' => $category->description,
+			'parent' => $parentId
+		];
+
+		wp_update_term($termId, 'product_cat', $data);
+	}
+
+	protected function deleteCategory($category) {
+		$termId = $this->getTermId($category->id);
+		wp_delete_term($termId, 'product_cat', [
+			'force_default' => true
+		]);
+	}
+
+	protected function getTermId($id) {
+		global $wpdb;
+		$tableName = Config::get('table.category');
+		return $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$id}");
 	}
 
 	private function getCategoryParent($category) {
@@ -63,19 +117,102 @@ class SyncController extends Controller
 	}
 
 	private function insertCategoryMapping($category, $term) {
-		if(!is_array($term)) return;
+		if($term instanceof WP_Error) return;
 		if(!isset($term['term_id'])) return;
 		global $wpdb;
 		$tableName = Config::get('tables.category');
 		$wpdb->insert($tableName, [
-			'term_id' => 50,
-			'category_id' => 31
+			'term_id' => $term['term_id'],
+			'category_id' => $category->id
 		]);
 	}
 
-	public function products() {
+	public function products($products) {
 		if(count($products)) {
 			$this->hasMore = true;
 		}
+
+		foreach($products as $product) {
+			switch ($product->action) {
+				case 'create':
+					$this->createProduct($product);
+					break;
+				case 'update':
+					$this->updateProduct($product);
+					break;
+				case 'delete':
+					$this->deleteProduct($product);
+
+				default:
+					# code...
+					break;
+			}
+		}
+	}
+
+	protected function createProduct($product) {
+		$categories = array_map(function($cat) {
+			return $cat->id;
+		}, $product->categories);
+
+		$post = wp_insert_post([
+			'post_content' => $product->description,
+			'post_title' => $product->name,
+			'post_excerpt' => $product->excerpt,
+			'post_status' => 'publish',
+			'post_type' => 'product',
+			'post_category' => $$categories
+		], true);
+		$this->insertProductMapping($product, $post);
+	}
+
+	protected function updateProduct($product) {
+		$postId = $this->getPostId($product->id);
+		if(!$postId) {
+			$this->createProduct($product);
+		}
+		$categories = null;
+		if($product->categories) {
+			$categories = array_map(function($cat) {
+				return $cat->id;
+			}, $product->categories);
+		}
+		$data = [
+			'ID' => $postId,
+			'post_content' => $product->description,
+			'post_title' => $product->name,
+			'post_excerpt' => $product->excerpt,
+			'post_category' => $$categories
+		];
+
+		$data = array_filter($data, function($val) {
+			return $val;
+		});
+
+		$post = wp_insert_post($data, true);
+	}
+
+	protected function deleteProduct($product) {
+		$postId = $this->getPostId($product->id);
+		if(!$postId) return;
+		wp_delete_post($postId, true);
+	}
+
+	public function getPostId($id) {
+		$tableName = Config::get('tables.product');
+		global $wpdb;
+		return $wpdb->get_var("SELECT post_id FROM {$tableName} WHERE product_id={$id}");
+	}
+
+	private function insertProductMapping($product, $post) {
+		if($post instanceof WP_Error) {
+			return;
+		}
+		global $wpdb;
+		$tableName = Config::get('tables.category');
+		$wpdb->insert($tableName, [
+			'product_id' => $product->id,
+			'post_id' => $post
+		]);
 	}
 }
