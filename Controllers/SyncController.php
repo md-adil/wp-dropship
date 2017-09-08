@@ -27,12 +27,11 @@ class SyncController extends Controller
 		}
 
 		if($res->categories) {
-			return $this->categories($res->categories);
+			$this->categories($res->categories);
 		}
 		if($res->products) {
 			$this->products($res->products);
 		}
-
 		return [
 			'status' => 'ok',
 			'hasMore' => $this->hasMore
@@ -142,7 +141,6 @@ class SyncController extends Controller
 					break;
 				case 'delete':
 					$this->deleteProduct($product);
-
 				default:
 					# code...
 					break;
@@ -150,52 +148,88 @@ class SyncController extends Controller
 		}
 	}
 
-	protected function createProduct($product) {
-		$categories = array_map(function($cat) {
-			return $cat->id;
-		}, $product->categories);
-
-		$post = wp_insert_post([
-			'post_content' => $product->description,
-			'post_title' => $product->name,
-			'post_excerpt' => $product->excerpt,
-			'post_status' => 'publish',
-			'post_type' => 'product',
-			'post_category' => $$categories
-		], true);
-		$this->insertProductMapping($product, $post);
-	}
-
-	protected function updateProduct($product) {
-		$postId = $this->getPostId($product->id);
-		if(!$postId) {
-			$this->createProduct($product);
-		}
-		$categories = null;
+	protected function preparePost($product) {
+		$categories = [];
 		if($product->categories) {
 			$categories = array_map(function($cat) {
 				return $cat->id;
 			}, $product->categories);
 		}
-		$data = [
-			'ID' => $postId,
+
+		return [
 			'post_content' => $product->description,
 			'post_title' => $product->name,
 			'post_excerpt' => $product->excerpt,
-			'post_category' => $$categories
+			'post_status' => 'publish',
+			'post_type' => 'product',
+			'post_category' => $categories
 		];
+	}
+	protected function createProduct($product) {
+		$data = $this->preparePost($product);
+		$data = array_filter($data);
+		$post = wp_insert_post($data, true);
+		$this->insertProductMapping($product, $post);
+		$this->insertPostMeta($post, $product);
+	}
 
-		$data = array_filter($data, function($val) {
-			return $val;
+	protected function preparePostMeta($product) {
+		return array_filter([
+			'_sku' => $product->sku,
+			'_weight' => $product->weight,
+			'_height' => $product->height,
+			'_width' => $product->width,
+			'_length' => $product->length,
+			'_tax_status' => $product->taxable,
+			'_sale_price' => $product->amount,
+			'_regular_price' => $product->amount,
+			'_price' => $product->amount,
+			'_stock' => $product->quantity,
+			'_stock_status' => $product->quantity === 0 ?  'outofstock' : 'instock'
+		], function($val) {
+			return !is_null($val);
 		});
+	}
+
+	protected function insertPostMeta($postId, $product) {
+		if($postId instanceof WP_Error) {
+			return;
+		}
+		$meta = $this->preparePostMeta($product);
+		$meta['_manage_stock'] = 'yes';
+		foreach($meta as $key => $val) {
+			add_post_meta($postId, $key, $val, true);
+		}
+	}
+
+	protected function updatePostMeta($postId, $product) {
+		$meta = $this->preparePostMeta($product);
+		foreach($meta as $key => $val) {
+			update_post_meta($postId, $key, $val);
+		}
+	}
+
+	protected function updateProduct($product) {
+		$postId = $this->getPostId($product->id);
+		if(!$postId) {
+			return $this->createProduct($product);
+		}
+
+		$data = $this->preparePost($product);
+		$data['ID'] = $postId;
+		$data = array_filter($data);
 
 		$post = wp_insert_post($data, true);
+		return $this->updatePostMeta($postId, $product);
 	}
 
 	protected function deleteProduct($product) {
 		$postId = $this->getPostId($product->id);
 		if(!$postId) return;
+		global $wpdb;
+		$tableName = Config::get('tables.product');
 		wp_delete_post($postId, true);
+		$wpdb->delete($tableName, ['product_id' => $product->id]);
 	}
 
 	public function getPostId($id) {
@@ -209,7 +243,7 @@ class SyncController extends Controller
 			return;
 		}
 		global $wpdb;
-		$tableName = Config::get('tables.category');
+		$tableName = Config::get('tables.product');
 		$wpdb->insert($tableName, [
 			'product_id' => $product->id,
 			'post_id' => $post
