@@ -34,7 +34,11 @@ class SyncController extends Controller
 		}
 		return [
 			'status' => 'ok',
-			'hasMore' => $this->hasMore
+			'hasMore' => $this->hasMore,
+			'data' => [
+				'categories' => count($res->categories ?: []),
+				'products' => count($res->products ?: [])
+			]
 		];
 		
 	}
@@ -55,9 +59,7 @@ class SyncController extends Controller
 				case 'delete':
 					$this->deleteCategory($category);
 					break;
-				
 				default:
-					# code...
 					break;
 			}
 		}
