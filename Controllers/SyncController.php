@@ -12,13 +12,23 @@ class SyncController extends Controller
 		$syncPath = Config::get('remote.sync');
 		$res = blds_remote_get($syncPath);
 		$responseCode = wp_remote_retrieve_response_code($res);
+		if($responseCode === 401) {
+			return [
+				'status' => 'fail',
+				'message' => 'It seems credentials isnt valid. Do you want to update?',
+				'redirect' => 'admin.php?page=' . 'bigly-dropship/credentials'
+			];
+		}
+
 		if($responseCode !== 200) {
 			return [
 				'status' => 'fail',
-				'message' => 'Something went wrong with credentials'
+				'message' => 'Something went wrong'
 			];
 		}
+
 		$res = json_decode($res['body']);
+
 		if(!$res) {
 			return [
 				'status' => 'fail',

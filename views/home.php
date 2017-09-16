@@ -29,17 +29,22 @@ require(__DIR__ . '/../includes/header.php');
 		btn.addClass('blds-preloader');
 		addMessage("Sending request for page " + page, 'warning');
 		$.post('admin-ajax.php', {action: 'blds_sync'}, function(res) {
-			if(res.status != 'ok') {
-				addMessage(res.message, 'error');
-				return;
+			if(res.status === 'ok') {
+				return handleResponse(res);
 			}
+			if(res.redirect) {
+				if( res.message && !confirm(res.message)) {
+					return;
+				}
+				window.location.href = res.redirect;
+			}
+		}).always(function() {
 			btn.removeClass('blds-preloader');
-			addMessage("Data synced: Category - " + res.data.categories + ', Product - ' + res.data.products);
-			handleResponse(res);
 		});
 	}
 
 	function handleResponse(res) {
+		addMessage("Data synced: Category - " + res.data.categories + ', Product - ' + res.data.products);
 		if(res.hasMore) {
 			page ++;
 			sendRequest();
