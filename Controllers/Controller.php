@@ -5,6 +5,25 @@ namespace Bigly\Dropship\Controllers;
 class Controller
 {
     protected static $instances = [];
+    protected static $isExceptionHandled = false;
+
+    function __construct() {
+        if(!static::$isExceptionHandled) {
+            set_error_handler([$this, 'handleError']);
+            set_exception_handler([$this, 'handleException']);
+            static::$isExceptionHandled = true;
+        }
+    }
+    
+    protected function handleError($code, $message, $file, $line) {
+        wp_send_json(compact('code', 'message', 'file', 'line'));
+        exit();
+    }
+
+    protected function handleException($e) {
+        $this->handleError($e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine());
+    }
+
     protected function view($path, $args = [])
     {
         extract($args);
@@ -31,5 +50,10 @@ class Controller
         }
 
         return static::$instances[$className];
+    }
+
+    public function ifset(&$data, $default = null) {
+        if(isset($data)) return $data;
+        return $default;
     }
 }

@@ -2,52 +2,60 @@
 namespace Bigly\Dropship\Controllers;
 
 use Bigly\Dropship\Config;
+use WP_Error;
+use Exception;
 /**
 * 
 */
 class SyncController extends Controller
 {
-	
+	protected $hasMore = false;
 	public function sync() {
-		$syncPath = Config::get('remote.sync');
-		$res = blds_remote_get($syncPath);
-		$responseCode = wp_remote_retrieve_response_code($res);
-		if($responseCode === 401) {
-			return [
-				'status' => 'fail',
-				'message' => 'It seems credentials isnt valid. Do you want to update?',
-				'redirect' => 'admin.php?page=' . 'bigly-dropship/credentials'
-			];
-		}
+		try {
+			$syncPath = Config::get('remote.sync');
+			$res = blds_remote_get($syncPath);
+			$responseCode = wp_remote_retrieve_response_code($res);
+			if($responseCode === 401) {
+				return [
+					'status' => 'fail',
+					'message' => 'It seems credentials isnt valid. Do you want to update?',
+					'redirect' => 'admin.php?page=' . 'bigly-dropship/credentials'
+				];
+			}
 
-		if($responseCode !== 200) {
-			return [
-				'status' => 'fail',
-				'message' => 'Something went wrong'
-			];
-		}
+			if($responseCode !== 200) {
+				return [
+					'status' => 'fail',
+					'message' => 'Something went wrong'
+				];
+			}
 
-		$res = json_decode($res['body']);
+			$res = json_decode($res['body']);
 
-		if(!$res) {
-			return [
-				'status' => 'fail',
-				'message' => 'Unable to fetch records, something might went wrong.'
-			];
+			if(!$res) {
+				return [
+					'status' => 'fail',
+					'message' => 'Unable to fetch records, something might went wrong.'
+				];
+			}
+			if(isset($res->categories)) {
+				$this->categories($res->categories);
+			}
+			
+			if($res->products) {
+				$this->products($res->products);
+			}
+			
+		} catch (Exception $e) {
+			return $e->getLine();
 		}
-
-		if($res->categories) {
-			$this->categories($res->categories);
-		}
-		if($res->products) {
-			$this->products($res->products);
-		}
+		
 		return [
 			'status' => 'ok',
 			'hasMore' => $this->hasMore,
 			'data' => [
-				'categories' => count($res->categories ?: []),
-				'products' => count($res->products ?: [])
+				'categories' => count($this->ifset($res->categories, [])),
+				'products' => count($this->ifset($res->products,[]))
 			]
 		];
 		
@@ -61,7 +69,7 @@ class SyncController extends Controller
 		foreach($categories as $category) {
 			switch ($category->action) {
 				case 'create':
-					$this->createCategory($category);
+					return $this->createCategory($category);
 					break;
 				case 'update':
 					$this->updateCategory($category);
@@ -76,14 +84,16 @@ class SyncController extends Controller
 	}
 
 	protected function createCategory($category) {
-		$parentId;
+		$parentId = 0;
 		if($category->parent_id) {
 			$parentId = $this->getTermId($category->parent_id);
 		}
+
 		$term = wp_insert_term($category->name, 'product_cat', [
 			'description' => $category->description,
 			'parent' => $parentId ?: 0
 		]);
+
 		return $this->insertCategoryMapping($category, $term);
 	}
 
@@ -114,6 +124,7 @@ class SyncController extends Controller
 	}
 
 	protected function getTermId($id) {
+		die($id);
 		global $wpdb;
 		$tableName = Config::get('table.category');
 		return $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$id}");
@@ -128,7 +139,9 @@ class SyncController extends Controller
 	}
 
 	private function insertCategoryMapping($category, $term) {
-		if($term instanceof WP_Error) return;
+		if($term instanceof WP_Error) {
+			return;
+		}
 		if(!isset($term['term_id'])) return;
 		global $wpdb;
 		$tableName = Config::get('tables.category');
@@ -162,48 +175,53 @@ class SyncController extends Controller
 
 	protected function preparePost($product) {
 		$categories = [];
-		if($product->categories) {
+		if(isset($product->categories)) {
 			$categories = array_map(function($cat) {
 				return $cat->id;
 			}, $product->categories);
 		}
 
 		return [
-			'post_content' => $product->description,
-			'post_title' => $product->name,
-			'post_excerpt' => $product->excerpt,
+			'post_content' => $this->ifset($product->description),
+			'post_title' => $this->ifset($product->name),
+			'post_excerpt' => $this->ifset($product->excerpt),
 			'post_status' => 'publish',
 			'post_type' => 'product',
 			'post_category' => $categories
 		];
 	}
-	protected function createProduct($product) {
+
+	protected function createProduct($product)
+	{
 		$data = $this->preparePost($product);
 		$data = array_filter($data);
 		$post = wp_insert_post($data, true);
 		$this->insertProductMapping($product, $post);
 		$this->insertPostMeta($post, $product);
+		// $this->insertAttachments($product);
 	}
 
-	protected function preparePostMeta($product) {
+	protected function preparePostMeta($product)
+	{
 		return array_filter([
-			'_sku' => $product->sku,
-			'_weight' => $product->weight,
-			'_height' => $product->height,
-			'_width' => $product->width,
-			'_length' => $product->length,
-			'_tax_status' => $product->taxable,
-			'_sale_price' => $product->amount,
-			'_regular_price' => $product->amount,
-			'_price' => $product->amount,
-			'_stock' => $product->quantity,
-			'_stock_status' => $product->quantity === 0 ?  'outofstock' : 'instock'
+			'_sku' => $this->ifset($product->sku),
+			'_weight' => $this->ifset($product->weight),
+			'_height' => $this->ifset($product->height),
+			'_width' => $this->ifset($product->width),
+			'_length' => $this->ifset($product->length),
+			'_tax_status' => $this->ifset($product->taxable),
+			'_sale_price' => $this->ifset($product->amount),
+			'_regular_price' => $this->ifset($product->amount),
+			'_price' => $this->ifset($product->amount),
+			'_stock' => $this->ifset($product->quantity),
+			'_stock_status' => $this->ifset($product->quantity) === 0 ?  'outofstock' : 'instock'
 		], function($val) {
 			return !is_null($val);
 		});
 	}
 
-	protected function insertPostMeta($postId, $product) {
+	protected function insertPostMeta($postId, $product)
+	{
 		if($postId instanceof WP_Error) {
 			return;
 		}
@@ -261,4 +279,26 @@ class SyncController extends Controller
 			'post_id' => $post
 		]);
 	}
+
+	// private function insertAttachments($product)
+	// {
+	// 	if(!$product->media) {
+	// 		return;
+	// 	}
+
+	// 	foreach($product->media as $media) {
+	// 		$attachment = wp_insert_attachment([
+	// 			'guid' => $media->large,
+	// 			'post_mime_type' => $media->mime,
+	// 			'caption' => $media->caption
+	// 		], false, $product->id, true);
+	// 		if($attachment instanceof WP_Error) {
+	// 			continue;
+	// 		}
+
+	// 		if($media->default) {
+	// 			set_post_thumbnail( $product->id, $attachment );
+	// 		}
+	// 	}
+	// }
 }
