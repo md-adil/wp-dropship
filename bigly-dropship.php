@@ -4,6 +4,7 @@ use Bigly\Dropship\Framework\Container;
 use Bigly\Dropship\Config;
 use Bigly\Dropship\Activator;
 use Bigly\Dropship\Deactivator;
+use Bigly\Dropship\RegisterOrderHook;
 
 /**
  * Plugin Name: Bigly Dropship
@@ -46,6 +47,7 @@ function run_biglydropship()
     Config::set($config);
     $activator = new Activator(__FILE__);
     $deactivator = new Deactivator(__FILE__);
+    new RegisterOrderHook();
 }
 
 run_biglydropship();

@@ -21,6 +21,7 @@ class Deactivator
     {
         $this->dropTable(Config::get('tables.product'));
         $this->dropTable(Config::get('tables.category'));
+        $this->dropTable(Config::get('tables.order'));
     }
 
     public function dropTable($table)

@@ -280,6 +280,29 @@ class SyncController extends Controller
 		]);
 	}
 
+	public function test() {
+		// return 'adil';
+		$order = new \WC_Order(201);
+		// die($order->get_status());
+		// die($order->get_status());
+
+		return $order->get_id();
+		return $order->get_order_key( );
+		return $order->get_customer_note( );
+		return $order->get_prop( 'customer_note' );
+		return $order->get_address( 'billing' );
+		// return $order;
+		$ret = [];
+		// return
+		// $order->get_order_number();
+		$items = $order->get_items( 'line_item' );
+		foreach($items as $item) {
+			return $item->name;
+			$ret[] = $item['product_id'];
+		}
+		return $ret;
+	}
+
 	// private function insertAttachments($product)
 	// {
 	// 	if(!$product->media) {
