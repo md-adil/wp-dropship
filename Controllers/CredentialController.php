@@ -8,7 +8,6 @@ class CredentialController extends Controller
     protected $credential_prefix = 'biglydropship_credentials';
     public function index()
     {
-        
     }
 
     public function getAccessToken()
@@ -25,7 +24,7 @@ class CredentialController extends Controller
             ]
         ]);
         $res = json_decode($res['body']);
-        if($res->error) {
+        if (isset($res->error)) {
             wp_send_json([
                 'status' => 'fail',
                 'message' => $res->message,
@@ -33,7 +32,7 @@ class CredentialController extends Controller
             ]);
         } else {
             $token = $res->access_token;
-            if($token) {
+            if ($token) {
                 update_option($optionkey, $token);
                 wp_send_json([
                     'status' => 'ok',

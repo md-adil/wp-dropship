@@ -1,11 +1,4 @@
 <?php
-use Bigly\Dropship\Framework\App;
-use Bigly\Dropship\Framework\Container;
-use Bigly\Dropship\Config;
-use Bigly\Dropship\Activator;
-use Bigly\Dropship\Deactivator;
-use Bigly\Dropship\RegisterOrderHook;
-
 /**
  * Plugin Name: Bigly Dropship
  * Plugin URI: dropship.biglytech.net
@@ -13,6 +6,14 @@ use Bigly\Dropship\RegisterOrderHook;
  * Version: 0.1
  * Author: Md Adil <md-adil@live.com>
  */
+
+use Bigly\Dropship\Framework\App;
+use Bigly\Dropship\Framework\Container;
+use Bigly\Dropship\Config;
+use Bigly\Dropship\Activator;
+use Bigly\Dropship\Deactivator;
+use Bigly\Dropship\RegisterOrderHook;
+
 
 spl_autoload_register(function ($class) {
     $prefix = 'Bigly\\Dropship\\';
