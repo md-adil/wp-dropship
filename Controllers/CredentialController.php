@@ -5,6 +5,15 @@ use Bigly\Dropship\Config;
 
 class CredentialController extends Controller
 {
+    protected $request;
+    protected $config;
+
+    public function __construct()
+    {
+        $this->request = new Client;
+        $this->config = new Config;
+    }
+    
     protected $credential_prefix = 'biglydropship_credentials';
     public function index()
     {

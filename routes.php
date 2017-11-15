@@ -1,9 +1,22 @@
 <?php
 
-use Bigly\Dropship\Framework\Route;
+add_action('admin_menu', function () {
+    add_menu_page(
+        'Bigly Dropship',
+        'Bigly Dropship',
+        'manage_options',
+        'bigly-dropship',
+        'Bigly\Dropship\Controllers\mainMenu',
+        plugin_dir_url(__FILE__) . 'settings',
+        20
+    );
 
-Route::ajax('access-token', 'CredentialController@getAccessToken');
-Route::ajax('sync', 'SyncController@sync');
-Route::ajax('test', 'SyncController@test');
-
-Route::register();
+    add_submenu_page(
+        'bigly-dropship',
+        'Credentials',
+        'Credentials',
+        'manage_options',
+        'bigly-dropship/credentials',
+        'Bigly\Dropship\Controllers\credentials'
+    );
+});

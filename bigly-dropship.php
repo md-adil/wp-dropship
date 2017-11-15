@@ -14,7 +14,6 @@ use Bigly\Dropship\Activator;
 use Bigly\Dropship\Deactivator;
 use Bigly\Dropship\RegisterOrderHook;
 
-
 spl_autoload_register(function ($class) {
     $prefix = 'Bigly\\Dropship\\';
     $base_dir = __DIR__ . '/';
@@ -42,13 +41,20 @@ function run_biglydropship()
 {
     global $wpdb;
     $config = require(__DIR__ . '/configs/config.php');
-    if(file_exists(__DIR__ . '/configs/config.local.php')) {
+    require(__DIR__ . '/hooks.php');
+
+    $hook = new Hooks(__FILE__);
+    $hook->register();
+    
+    if (file_exists(__DIR__ . '/configs/config.local.php')) {
         $config = array_replace_recursive($config, require(__DIR__ . '/configs/config.local.php'));
     }
+
     Config::set($config);
     $activator = new Activator(__FILE__);
     $deactivator = new Deactivator(__FILE__);
     new RegisterOrderHook();
+    // Register Hooks
 }
 
 run_biglydropship();
