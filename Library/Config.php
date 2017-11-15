@@ -1,18 +1,24 @@
 <?php
-namespace Bigly\Dropship;
+
+namespace Bigly\Dropship\Library;
 
 class Config
 {
-    protected static $configs = [];
+    protected $configs;
 
-    public static function get($key, $default = null)
+    public function __construct($configs)
     {
-        $array = self::$configs;
+        $this->configs = $configs;
+    }
+
+    public function get($key, $default = null)
+    {
+        $array = $this->configs;
         if (is_null($key)) {
             return $array;
         }
 
-        if (static::exists($array, $key)) {
+        if ($this->exists($array, $key)) {
             return $array[$key];
         }
 
@@ -26,14 +32,14 @@ class Config
         return $array;
     }
 
-    public static function set($key, $value = null)
+    public function set($key, $value = null)
     {
-        $array = self::$configs;
+        $array = $this->configs;
         if (is_null($key)) {
             return $array = $value;
         }
         if (is_array($key)) {
-            return self::$configs = array_merge(self::$configs, $key);
+            $this->configs = array_merge($this->configs, $key);
         }
 
         $keys = explode('.', $key);
@@ -52,14 +58,14 @@ class Config
 
         $array[array_shift($keys)] = $value;
 
-        self::$configs = $array;
+        $this->configs = $array;
     }
-    public static function accessible($value)
+    public function accessible($value)
     {
         return true;
     }
 
-    public static function exists($array, $key)
+    public function exists($array, $key)
     {
         return array_key_exists($key, $array);
     }

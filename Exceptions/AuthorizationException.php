@@ -1,6 +1,6 @@
 <?php
-namespace Bigly\Dropship;
+namespace Bigly\Dropship\Exceptions;
 
-class AuthorizationException extends \Exception {
-		
+class AuthorizationException extends \Exception
+{
 }

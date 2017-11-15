@@ -2,27 +2,29 @@
 namespace Bigly\Dropship\Controllers;
 
 use Bigly\Dropship\Config;
+use Bigly\Dropship\Library\Client;
 
 class CredentialController extends Controller
 {
     protected $request;
-    protected $config;
+    protected $credential_prefix = 'biglydropship_credentials';
 
     public function __construct()
     {
-        $this->request = new Client;
-        $this->config = new Config;
+        parent::__construct();
+
+        $this->request = new Client($this->config);
     }
     
-    protected $credential_prefix = 'biglydropship_credentials';
     public function index()
     {
+        $this->view('credentials.php');
     }
 
     public function getAccessToken()
     {
-        $optionkey = Config::get('options.access_token');
-        $tokenUrl = Config::get('remote.base') . '/' . Config::get('remote.access_token');
+        $optionkey = $this->config->get('options.access_token');
+        $tokenUrl = $this->config->get('remote.base') . '/' . $this->config->get('remote.access_token');
         $res = wp_remote_post($tokenUrl, [
             'body' => [
                 'grant_type' => 'password',

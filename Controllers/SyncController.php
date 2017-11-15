@@ -2,8 +2,9 @@
 namespace Bigly\Dropship\Controllers;
 
 use Bigly\Dropship\Config;
-use WP_Error;
+use Bigly\Dropship\Library\Client;
 use Exception;
+use WP_Error;
 
 /**
 *
@@ -11,12 +12,18 @@ use Exception;
 class SyncController extends Controller
 {
     protected $hasMore = false;
-    
+    protected $request;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->request = new Client($this->config);
+    }
+
     public function sync()
     {
         try {
-            $syncPath = Config::get('remote.sync');
-            $res = blds_remote_get($syncPath);
+            $syncPath = $this->config->get('remote.sync');
+            $res = $this->request->auth()->get($syncPath);
             $responseCode = wp_remote_retrieve_response_code($res);
             if ($responseCode === 401) {
                 return [
@@ -132,7 +139,7 @@ class SyncController extends Controller
     {
         die($id);
         global $wpdb;
-        $tableName = Config::get('table.category');
+        $tableName = $this->config->get('table.category');
         return $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$id}");
     }
 
@@ -142,7 +149,7 @@ class SyncController extends Controller
             return 0;
         }
         global $wpdb;
-        $tableName = Config::get('table.category');
+        $tableName = $this->config->get('table.category');
         $parentId = $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$category->parent_id}");
         return $parentId ?: 0;
     }
@@ -156,7 +163,7 @@ class SyncController extends Controller
             return;
         }
         global $wpdb;
-        $tableName = Config::get('tables.category');
+        $tableName = $this->config->get('tables.category');
         $wpdb->insert($tableName, [
             'term_id' => $term['term_id'],
             'category_id' => $category->id
@@ -277,14 +284,14 @@ class SyncController extends Controller
             return;
         }
         global $wpdb;
-        $tableName = Config::get('tables.product');
+        $tableName = $this->config->get('tables.product');
         wp_delete_post($postId, true);
         $wpdb->delete($tableName, ['product_id' => $product->id]);
     }
 
     public function getPostId($id)
     {
-        $tableName = Config::get('tables.product');
+        $tableName = $this->config->get('tables.product');
         global $wpdb;
         return $wpdb->get_var("SELECT post_id FROM {$tableName} WHERE product_id={$id}");
     }
@@ -295,7 +302,7 @@ class SyncController extends Controller
             return;
         }
         global $wpdb;
-        $tableName = Config::get('tables.product');
+        $tableName = $this->config->get('tables.product');
         $wpdb->insert($tableName, [
             'product_id' => $product->id,
             'post_id' => $post

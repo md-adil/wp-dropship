@@ -1,4 +1,7 @@
 <?php
+
+use Bigly\Dropship\Hooks;
+
 /**
  * Plugin Name: Bigly Dropship
  * Plugin URI: dropship.biglytech.net
@@ -7,12 +10,6 @@
  * Author: Md Adil <md-adil@live.com>
  */
 
-use Bigly\Dropship\Framework\App;
-use Bigly\Dropship\Framework\Container;
-use Bigly\Dropship\Config;
-use Bigly\Dropship\Activator;
-use Bigly\Dropship\Deactivator;
-use Bigly\Dropship\RegisterOrderHook;
 
 spl_autoload_register(function ($class) {
     $prefix = 'Bigly\\Dropship\\';
@@ -27,34 +24,13 @@ spl_autoload_register(function ($class) {
         require $file;
     }
 });
-// Includes
-require(__DIR__ . '/includes/functions.php');
-require(__DIR__ . '/actions.php');
-require(__DIR__ . '/routes.php');
 
-require(__DIR__ . '/process/activate.php');
-require(__DIR__ . '/process/deactivate.php');
-
-
-
+// Initialize
 function run_biglydropship()
 {
-    global $wpdb;
-    $config = require(__DIR__ . '/configs/config.php');
-    require(__DIR__ . '/hooks.php');
-
-    $hook = new Hooks(__FILE__);
-    $hook->register();
-    
-    if (file_exists(__DIR__ . '/configs/config.local.php')) {
-        $config = array_replace_recursive($config, require(__DIR__ . '/configs/config.local.php'));
-    }
-
-    Config::set($config);
-    $activator = new Activator(__FILE__);
-    $deactivator = new Deactivator(__FILE__);
-    new RegisterOrderHook();
-    // Register Hooks
+    require(__DIR__ . '/routes.php');
+    $hook = new Hooks();
+    $hook->register(__FILE__);
 }
 
 run_biglydropship();

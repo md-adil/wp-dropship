@@ -1,4 +1,5 @@
 <?php
+namespace Bigly\Dropship\Controllers;
 
 class OrderController extends Controller
 {

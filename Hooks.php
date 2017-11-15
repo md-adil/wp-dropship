@@ -1,12 +1,15 @@
 <?php
 namespace Bigly\Dropship;
 
+use Bigly\Dropship\Controllers\ActivationController;
+use Bigly\Dropship\Controllers\OrderController;
+
 /**
 *
 */
-class Hook
+class Hooks
 {
-    public function register()
+    public function register($path)
     {
         $orderController = new OrderController;
         $activationController = new ActivationController;

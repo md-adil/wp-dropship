@@ -1,20 +1,53 @@
 <?php
+namespace Bigly\Dropship\Library;
+
 /**
-* 
+*
 */
 class Client
 {
-	
-	function __construct(argument)
-	{
-		# code...
-	}
+    protected $headers = [
+        'Accept' => 'application/json'
+    ];
 
-	public function request($method = 'GET', $uri, $options = array()) {
+    protected $config;
+    
+    public function __construct($config)
+    {
+        $this->config = $config;
+    }
 
-	}
+    public function setHeader($headers)
+    {
+        $this->headers = array_merge($this->headers, $headers);
+        return $this;
+    }
 
-	public function __call($fn, $args) {
-		return $this->request($fn, $args[0], $args[1]);
-	}
+    public function request($method = 'GET', $uri, $options = array())
+    {
+        $base = $this->config->get('remote.base');
+        foreach ($this->headers as $key => $val) {
+            $options['headers'][$key] = $val;
+        }
+        return call_user_func('wp_remote_' . strtolower($method), "{$base}/{$uri}", $options);
+    }
+
+    public function auth()
+    {
+        $accessToken = get_option($this->config->get('options.access_token'));
+        $clone = clone $this;
+        $clone->setHeader([
+            'Authorization' => 'Bearer ' . $accessToken,
+        ]);
+        return $clone;
+    }
+
+    public function __call($fn, $args)
+    {
+        $options = [];
+        if (isset($args[1])) {
+            $options = $args[1];
+        }
+        return $this->request($fn, $args[0], $options);
+    }
 }

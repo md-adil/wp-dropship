@@ -2,25 +2,50 @@
 
 namespace Bigly\Dropship\Controllers;
 
+use Bigly\Dropship\Library\Config;
+
 class Controller
 {
     protected static $instances = [];
     protected static $isExceptionHandled = false;
-
-    function __construct() {
-        if(!static::$isExceptionHandled) {
+    protected static $configInstance;
+    protected $config;
+    protected $db;
+    
+    public function __construct()
+    {
+        if (!static::$isExceptionHandled) {
             set_error_handler([$this, 'handleError']);
             set_exception_handler([$this, 'handleException']);
             static::$isExceptionHandled = true;
         }
+        $this->setConfig();
+
+        global $wpdb;
+        $this->db = $wpdb;
+    }
+
+    protected function setConfig()
+    {
+        if (!static::$configInstance) {
+            $configs = require(__DIR__ . '/../configs/config.php');
+            if (file_exists(__DIR__ . '/../configs/config.local.php')) {
+                $configs = array_replace_recursive($configs, require(__DIR__ . '/../configs/config.local.php'));
+            }
+            static::$configInstance = new Config($configs);
+        }
+        $this->config = static::$configInstance;
     }
     
-    protected function handleError($code, $message, $file, $line) {
+    public function handleError($code, $message, $file, $line)
+    {
+        http_response_code(500);
         wp_send_json(compact('code', 'message', 'file', 'line'));
         exit();
     }
 
-    protected function handleException($e) {
+    public function handleException($e)
+    {
         $this->handleError($e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine());
     }
 
@@ -42,18 +67,15 @@ class Controller
         die();
     }
 
-    public static function getInstance()
+    public function ifset(&$data, $default = null)
     {
-        $className = get_called_class();
-        if (!isset(static::$instances[$className])) {
-            static::$instances[$className] = new static;
+        if (isset($data)) {
+            return $data;
         }
-
-        return static::$instances[$className];
+        return $default;
     }
 
-    public function ifset(&$data, $default = null) {
-        if(isset($data)) return $data;
-        return $default;
+    public static function register()
+    {
     }
 }
