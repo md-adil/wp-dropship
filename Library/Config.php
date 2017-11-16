@@ -23,7 +23,7 @@ class Config
         }
 
         foreach (explode('.', $key) as $segment) {
-            if (static::accessible($array) && static::exists($array, $segment)) {
+            if ($this->accessible($array) && $this->exists($array, $segment)) {
                 $array = $array[$segment];
             } else {
                 return $default;

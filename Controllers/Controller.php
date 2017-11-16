@@ -75,7 +75,21 @@ class Controller
         return $default;
     }
 
-    public static function register()
+    public static function resolve($callable)
     {
+        return function () use ($callable) {
+            list($class, $method) = explode('@', $callable);
+            $prefix = '\Bigly\Dropship\Controllers';
+            $className = $prefix . '\\' . $class;
+            if (!isset(static::$instances[$className])) {
+                static::$instances[$className] = new $className;
+            }
+            $response = call_user_func([static::$instances[$className], $method]);
+            if (is_array($response)) {
+                echo wp_send_json($response);
+            } elseif ($response) {
+                echo $response;
+            }
+        };
     }
 }

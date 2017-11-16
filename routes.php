@@ -1,8 +1,6 @@
 <?php
 
-use Bigly\Dropship\Controllers\CredentialController;
-use Bigly\Dropship\Controllers\HomeController;
-use Bigly\Dropship\Controllers\SyncController;
+use Bigly\Dropship\Controllers\Controller;
 
 add_action('admin_menu', function () {
     add_menu_page(
@@ -10,7 +8,7 @@ add_action('admin_menu', function () {
         'Bigly Dropship',
         'manage_options',
         'bigly-dropship',
-        [ new HomeController, 'index'],
+        Controller::resolve('HomeController@index'),
         plugin_dir_url(__FILE__) . 'settings',
         20
     );
@@ -21,9 +19,9 @@ add_action('admin_menu', function () {
         'Credentials',
         'manage_options',
         'bigly-dropship/credentials',
-        [ new CredentialController, 'index' ]
+        Controller::resolve('CredentialController@index')
     );
 });
 
-add_action('wp_ajax_blds_access-token', [ new CredentialController, 'getAccessToken' ]);
-add_action('wp_ajax_blds_sync', [ new SyncController, 'sync' ]);
+add_action('wp_ajax_blds_access-token', Controller::resolve('CredentialController@getAccessToken'));
+add_action('wp_ajax_blds_sync', Controller::resolve('SyncController@sync'));
