@@ -32,7 +32,7 @@ class Client
         return call_user_func('wp_remote_' . strtolower($method), "{$base}/{$uri}", $options);
     }
 
-    public function auth()
+    public function withAuth()
     {
         $accessToken = get_option($this->config->get('options.access_token'));
         $clone = clone $this;
@@ -44,7 +44,7 @@ class Client
 
     public function __call($fn, $args)
     {
-        $options = [];
+        $options = array();
         if (isset($args[1])) {
             $options = $args[1];
         }

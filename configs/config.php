@@ -2,9 +2,7 @@
 global $wpdb;
 return [
     'tables' => [
-        'product' => $wpdb->prefix . 'blds_product_map',
-        'category' => $wpdb->prefix . 'blds_category_map',
-        'order' => $wpdb->prefix . 'blds_order_map',
+        'sync' => $wpdb->prefix . 'blds_sync_map',
     ],
 
     'options' => [

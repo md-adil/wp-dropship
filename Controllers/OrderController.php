@@ -1,12 +1,18 @@
 <?php
 namespace Bigly\Dropship\Controllers;
+use WC_Order;
+use Bigly\Dropship\Library\Client;
 
 class OrderController extends Controller
 {
+    protected $request;
+
     protected function placed($orderId)
     {
+        $this->request = new Client($this->config);
         $order = new WC_Order($orderId);
         $this->create($order);
+
     }
 
     protected function create(WC_Order $order)
@@ -16,7 +22,7 @@ class OrderController extends Controller
             return;
         }
 
-        $res = blds_remote_post('api/orders', [
+        $res = $this->request->withAuth()->post('api/orders', [
             'header' => [
                 'content-type' => 'application/json'
             ],
@@ -44,7 +50,7 @@ class OrderController extends Controller
         foreach ($items as $item) {
             $posts[] = $item['product_id'];
         }
-        $table = Config::get('tables.product');
+        $table = $this->config->get('tables.product');
         $results = $this->db->get_results("SELECT product_id FROM {$table} WHERE post_id IN " . implode(',', $posts), OBJECT);
 
         foreach ($results as $row) {
@@ -61,7 +67,7 @@ class OrderController extends Controller
             return $this->create(new WC_Order($postId));
         }
 
-        $res = blds_remote_post('api/orders/' . $orderId, [
+        $res = $this->request->withAuth()->post('api/orders/' . $orderId, [
             'header' => [
                 'content-type' => 'application/json'
             ],
@@ -71,13 +77,13 @@ class OrderController extends Controller
 
     protected function getMappingId($id)
     {
-        $table = Config::get('tables.order');
+        $table = $this->config->get('tables.order');
         return $this->db->get_var("SELECT order_id FROM {$table} WHERE post_id={$id}");
     }
 
     protected function insertMapping(WC_Order $order, $orderId)
     {
-        $table = Config::get('tables.order');
+        $table = $this->config->get('tables.order');
         $this->db->insert($table, [
             'post_id' => $order->get_id(),
             'order_id' => $orderId

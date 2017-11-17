@@ -36,24 +36,24 @@ class CredentialController extends Controller
         ]);
         $res = json_decode($res['body']);
         if (isset($res->error)) {
-            wp_send_json([
+            return [
                 'status' => 'fail',
                 'message' => $res->message,
                 'data' => $_POST
-            ]);
+            ];
         } else {
             $token = $res->access_token;
             if ($token) {
                 update_option($optionkey, $token);
-                wp_send_json([
+                return [
                     'status' => 'ok',
                     'message' => 'Status has been updated.'
-                ]);
+                ];
             } else {
-                wp_send_json([
+                return [
                     'status' => 'fail',
                     'Invalid response found, please contact service provider'
-                ]);
+                ];
             }
         }
     }

@@ -13,36 +13,21 @@ class ActivationController extends Controller
 
     public function createTables()
     {
-        global $wpdb;
-        $wpdb->query($this->createProductMapTable());
-        $wpdb->query($this->createCategoryMapTable());
+        try {
+            $this->db->query($this->createSyncMapTable());
+        } catch(\Exception $e) {
+            echo $e->getMessage();
+        }
     }
 
-    private function createProductMapTable()
+    private function createSyncMapTable()
     {
-        $table = Config::get('tables.product');
-
+        $table = $this->config->get('tables.sync');
         return "CREATE TABLE {$table} (
-            post_id BIGINT UNSIGNED,
-            product_id INT UNSIGNED
-        )";
-    }
-
-    private function createCategoryMapTable()
-    {
-        $table = Config::get('tables.category');
-        return "CREATE TABLE {$table} (
-            term_id BIGINT UNSIGNED,
-            category_id INT UNSIGNED
-        )";
-    }
-
-    private function createOrderMapTable()
-    {
-        $table = Config::get('tables.order');
-        return "CREATE TABLE {$table} (
-            post_id BIGINT UNSIGNED,
-            order_id INT UNSIGNED
+            `host_id` BIGINT UNSIGNED,
+            `guest_id` INT UNSIGNED
+            `type` VARCHAR(10),
+            PRIMARY KEY (`host_id`, `guest_id`, `type`)
         )";
     }
 
@@ -53,14 +38,11 @@ class ActivationController extends Controller
 
     public function dropTables()
     {
-        $this->dropTable(Config::get('tables.product'));
-        $this->dropTable(Config::get('tables.category'));
-        $this->dropTable(Config::get('tables.order'));
+        $this->dropTable($this->config->get('tables.sync'));
     }
 
     public function dropTable($table)
     {
-        global $wpdb;
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        $this->db->query("DROP TABLE IF EXISTS {$table}");
     }
 }

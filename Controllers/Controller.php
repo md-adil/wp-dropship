@@ -14,15 +14,14 @@ class Controller
     
     public function __construct()
     {
+        global $wpdb;
+        $this->db = $wpdb;
         if (!static::$isExceptionHandled) {
             set_error_handler([$this, 'handleError']);
             set_exception_handler([$this, 'handleException']);
             static::$isExceptionHandled = true;
         }
         $this->setConfig();
-
-        global $wpdb;
-        $this->db = $wpdb;
     }
 
     protected function setConfig()
