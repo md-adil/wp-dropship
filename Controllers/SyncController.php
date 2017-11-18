@@ -163,10 +163,11 @@ class SyncController extends Controller
             return;
         }
         global $wpdb;
-        $tableName = $this->config->get('tables.category');
+        $tableName = $this->config->get('tables.sync');
         $wpdb->insert($tableName, [
-            'term_id' => $term['term_id'],
-            'category_id' => $category->id
+            'host_id' => $term['term_id'],
+            'guest_id' => $category->id,
+            'type' => 'category'
         ]);
     }
 
@@ -301,11 +302,11 @@ class SyncController extends Controller
         if ($post instanceof WP_Error) {
             return;
         }
-        global $wpdb;
         $tableName = $this->config->get('tables.product');
-        $wpdb->insert($tableName, [
-            'product_id' => $product->id,
-            'post_id' => $post
+        $this->db->insert($tableName, [
+            'guest_id' => $product->id,
+            'host_id' => $post,
+            'type' => 'category'
         ]);
     }
 
@@ -333,25 +334,25 @@ class SyncController extends Controller
         return $ret;
     }
 
-    // private function insertAttachments($product)
-    // {
-    // 	if(!$product->media) {
-    // 		return;
-    // 	}
+    private function insertAttachments($product)
+    {
+    	if(!$product->media) {
+    		return;
+    	}
 
-    // 	foreach($product->media as $media) {
-    // 		$attachment = wp_insert_attachment([
-    // 			'guid' => $media->large,
-    // 			'post_mime_type' => $media->mime,
-    // 			'caption' => $media->caption
-    // 		], false, $product->id, true);
-    // 		if($attachment instanceof WP_Error) {
-    // 			continue;
-    // 		}
+    	foreach($product->media as $media) {
+    		$attachment = wp_insert_attachment([
+    			'guid' => $media->large,
+    			'post_mime_type' => $media->mime,
+    			'caption' => $media->caption
+    		], false, $product->id, true);
+    		if($attachment instanceof WP_Error) {
+    			continue;
+    		}
 
-    // 		if($media->default) {
-    // 			set_post_thumbnail( $product->id, $attachment );
-    // 		}
-    // 	}
-    // }
+    		if($media->default) {
+    			set_post_thumbnail( $product->id, $attachment );
+    		}
+    	}
+    }
 }

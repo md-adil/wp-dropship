@@ -51,7 +51,7 @@ class OrderController extends Controller
             $posts[] = $item['product_id'];
         }
         $table = $this->config->get('tables.product');
-        $results = $this->db->get_results("SELECT product_id FROM {$table} WHERE post_id IN " . implode(',', $posts), OBJECT);
+        $results = $this->db->get_results("SELECT guest_id as product_id FROM {$table} WHERE type='product' AND host_id IN " . implode(',', $posts), OBJECT);
 
         foreach ($results as $row) {
             $product[] = $row->product_id;
@@ -78,15 +78,16 @@ class OrderController extends Controller
     protected function getMappingId($id)
     {
         $table = $this->config->get('tables.order');
-        return $this->db->get_var("SELECT order_id FROM {$table} WHERE post_id={$id}");
+        return $this->db->get_var("SELECT guest_id as order_id FROM {$table} WHERE type='order' AND host_id={$id}");
     }
 
     protected function insertMapping(WC_Order $order, $orderId)
     {
-        $table = $this->config->get('tables.order');
+        $table = $this->config->get('tables.sync');
         $this->db->insert($table, [
-            'post_id' => $order->get_id(),
-            'order_id' => $orderId
+            'host_id' => $order->get_id(),
+            'guest_id' => $orderId,
+            'type' => 'order'
         ]);
     }
 

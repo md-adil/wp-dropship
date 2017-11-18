@@ -1,7 +1,5 @@
 <?php
 
-use Bigly\Dropship\Hooks;
-
 /**
  * Plugin Name: Bigly Dropship
  * Plugin URI: dropship.biglytech.net
@@ -10,6 +8,7 @@ use Bigly\Dropship\Hooks;
  * Author: Md Adil <md-adil@live.com>
  */
 
+define('BIGLY_DROPSHIP_FILE', __FILE__);
 
 spl_autoload_register(function ($class) {
     $prefix = 'Bigly\\Dropship\\';
@@ -29,8 +28,6 @@ spl_autoload_register(function ($class) {
 function run_biglydropship()
 {
     require(__DIR__ . '/routes.php');
-    $hook = new Hooks();
-    $hook->register(__FILE__);
 }
 
 run_biglydropship();

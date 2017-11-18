@@ -7,7 +7,6 @@ use Bigly\Dropship\Library\Client;
 class CredentialController extends Controller
 {
     protected $request;
-    protected $credential_prefix = 'biglydropship_credentials';
 
     public function __construct()
     {
@@ -25,7 +24,7 @@ class CredentialController extends Controller
     {
         $optionkey = $this->config->get('options.access_token');
         $tokenUrl = $this->config->get('remote.base') . '/' . $this->config->get('remote.access_token');
-        $res = wp_remote_post($tokenUrl, [
+        $res = $this->request->post($tokenUrl, [
             'body' => [
                 'grant_type' => 'password',
                 'client_id' => $_POST['client_id'],

@@ -16,7 +16,7 @@ class ActivationController extends Controller
         try {
             $this->db->query($this->createSyncMapTable());
         } catch(\Exception $e) {
-            echo $e->getMessage();
+            die( $e->getMessage() );
         }
     }
 
@@ -25,7 +25,7 @@ class ActivationController extends Controller
         $table = $this->config->get('tables.sync');
         return "CREATE TABLE {$table} (
             `host_id` BIGINT UNSIGNED,
-            `guest_id` INT UNSIGNED
+            `guest_id` INT UNSIGNED,
             `type` VARCHAR(10),
             PRIMARY KEY (`host_id`, `guest_id`, `type`)
         )";
