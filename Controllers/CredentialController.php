@@ -34,6 +34,14 @@ class CredentialController extends Controller
             ]
         ]);
         $res = json_decode($res['body']);
+
+        if ($res === null
+            && json_last_error() !== JSON_ERROR_NONE) {
+            return [
+                'status' => 'fail',
+                'message' => 'Something went wrong while accessing credentials.'
+            ];
+        }
         if (isset($res->error)) {
             return [
                 'status' => 'fail',
