@@ -23,7 +23,7 @@ class SyncController extends Controller
     {
         try {
             $syncPath = $this->config->get('remote.sync');
-            $res = $this->request->auth()->get($syncPath);
+            $res = $this->request->withAuth()->get($syncPath);
             $responseCode = wp_remote_retrieve_response_code($res);
             if ($responseCode === 401) {
                 return [
@@ -137,10 +137,8 @@ class SyncController extends Controller
 
     protected function getTermId($id)
     {
-        die($id);
-        global $wpdb;
-        $tableName = $this->config->get('table.category');
-        return $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$id}");
+        $tableName = $this->config->get('table.sync');
+        return $this->db->get_var("SELECT host_id FROM {$tableName} WHERE guest={$id} AND type='category'");
     }
 
     private function getCategoryParent($category)
@@ -149,8 +147,8 @@ class SyncController extends Controller
             return 0;
         }
         global $wpdb;
-        $tableName = $this->config->get('table.category');
-        $parentId = $wpdb->get_var("SELECT term_id FROM {$tableName} WHERE category_id={$category->parent_id}");
+        $tableName = $this->config->get('table.sync');
+        $parentId = $wpdb->get_var("SELECT host_id FROM {$tableName} WHERE guest_id={$category->parent_id} AND type='category'");
         return $parentId ?: 0;
     }
 
@@ -221,7 +219,7 @@ class SyncController extends Controller
         $post = wp_insert_post($data, true);
         $this->insertProductMapping($product, $post);
         $this->insertPostMeta($post, $product);
-        // $this->insertAttachments($product);
+        $this->insertAttachments($product, $post);
     }
 
     protected function preparePostMeta($product)
@@ -275,6 +273,8 @@ class SyncController extends Controller
         $data = array_filter($data);
 
         $post = wp_insert_post($data, true);
+
+        // Checking if product has already medias then remove it first then insert again.
         return $this->updatePostMeta($postId, $product);
     }
 
@@ -285,16 +285,14 @@ class SyncController extends Controller
             return;
         }
         global $wpdb;
-        $tableName = $this->config->get('tables.product');
+        $tableName = $this->config->get('tables.sync');
         wp_delete_post($postId, true);
-        $wpdb->delete($tableName, ['product_id' => $product->id]);
+        $wpdb->delete($tableName, ['guest_id' => $product->id, 'type'=>'product']);
     }
 
     public function getPostId($id)
     {
-        $tableName = $this->config->get('tables.product');
-        global $wpdb;
-        return $wpdb->get_var("SELECT post_id FROM {$tableName} WHERE product_id={$id}");
+        return $this->getVar('host_id', [ 'guest_id' => $id, 'type' => 'product' ]);
     }
 
     private function insertProductMapping($product, $post)
@@ -302,7 +300,7 @@ class SyncController extends Controller
         if ($post instanceof WP_Error) {
             return;
         }
-        $tableName = $this->config->get('tables.product');
+        $tableName = $this->config->get('tables.sync');
         $this->db->insert($tableName, [
             'guest_id' => $product->id,
             'host_id' => $post,
@@ -312,47 +310,42 @@ class SyncController extends Controller
 
     public function test()
     {
-        // return 'adil';
-        $order = new \WC_Order(201);
-        // die($order->get_status());
-        // die($order->get_status());
-
-        return $order->get_id();
-        return $order->get_order_key();
-        return $order->get_customer_note();
-        return $order->get_prop('customer_note');
-        return $order->get_address('billing');
-        // return $order;
-        $ret = [];
-        // return
-        // $order->get_order_number();
-        $items = $order->get_items('line_item');
-        foreach ($items as $item) {
-            return $item->name;
-            $ret[] = $item['product_id'];
-        }
-        return $ret;
     }
 
-    private function insertAttachments($product)
+    private function insertAttachments($product, $postId)
     {
-    	if(!$product->media) {
-    		return;
-    	}
+        if (!isset($product->media) || !$product->media) {
+            return;
+        }
 
-    	foreach($product->media as $media) {
-    		$attachment = wp_insert_attachment([
-    			'guid' => $media->large,
-    			'post_mime_type' => $media->mime,
-    			'caption' => $media->caption
-    		], false, $product->id, true);
-    		if($attachment instanceof WP_Error) {
-    			continue;
-    		}
+        foreach ($product->media as $media) {
+            $attachment = wp_insert_attachment([
+                'guid' => $media->large,
+                'post_mime_type' => $media->mime,
+                'caption' => $media->caption
+            ], false, $postId, true);
+            if ($attachment instanceof WP_Error) {
+                continue;
+            }
 
-    		if($media->default) {
-    			set_post_thumbnail( $product->id, $attachment );
-    		}
-    	}
+            if ($media->default) {
+                set_post_thumbnail($postId, $attachment);
+            }
+        }
+    }
+
+    protected function getVar($var, $queries = array())
+    {
+        $tableName = $this->config->get('tables.sync');
+        $conds = [];
+        foreach ($queries as $key => $val) {
+            $conds[] = "{$key}='{$val}'";
+        }
+        $conds = implode(' AND ', $conds);
+        $this->db->get_var("SELECT {$var} FROM {$tableName} WHERE $conds");
+    }
+
+    protected function arrayToQuery()
+    {
     }
 }

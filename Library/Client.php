@@ -45,6 +45,11 @@ class Client
     public function __call($fn, $args)
     {
         $options = array();
+
+        if (!count($args)) {
+            throw new \Exception("Client URL is required", 1001);
+        }
+
         if (isset($args[1])) {
             $options = $args[1];
         }
