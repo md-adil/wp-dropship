@@ -1,0 +1,24 @@
+{
+    "name": "bigly/wp-dropship",
+    "description": "BiglyTechnology Dropship plugin for wordpress",
+    "type": "wordpress-plugin",
+    "version": "0.01",
+    "authors": [
+        {
+            "name": "Md Adil",
+            "email": "md-adil@live.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload-dev": {
+        "classmap": [
+            "Composer/Management.php"
+        ]        
+    },
+    "scripts": {
+        "deploy": [
+            "Composer\\Management::deploy"
+        ]        
+    }
+}
