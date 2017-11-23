@@ -23,7 +23,7 @@ class CredentialController extends Controller
     public function getAccessToken()
     {
         $optionkey = $this->config->get('options.access_token');
-        $tokenUrl = $this->config->get('remote.base') . '/' . $this->config->get('remote.access_token');
+        $tokenUrl = $this->config->get('remote.access_token');
         $res = $this->request->post($tokenUrl, [
             'body' => [
                 'grant_type' => 'password',
@@ -39,7 +39,8 @@ class CredentialController extends Controller
             && json_last_error() !== JSON_ERROR_NONE) {
             return [
                 'status' => 'fail',
-                'message' => 'Something went wrong while accessing credentials.'
+                'message' => 'Something went wrong while accessing credentials.',
+                'error' => 'Invalid json response'
             ];
         }
         if (isset($res->error)) {

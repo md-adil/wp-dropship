@@ -32,11 +32,11 @@ class SyncController extends Controller
                     'redirect' => 'admin.php?page=' . 'bigly-dropship/credentials'
                 ];
             }
-
             if ($responseCode !== 200) {
                 return [
                     'status' => 'fail',
-                    'message' => 'Something went wrong'
+                    'message' => 'Something went wrong',
+                    'response_code' => $responseCode
                 ];
             }
 
