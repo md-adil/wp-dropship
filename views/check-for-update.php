@@ -15,7 +15,11 @@
     }
 </style>
 <div class="wrap" style="width: 30%; margin: 0 auto">
+<<<<<<< HEAD
     <div id="blds-notification" class="notice notice-warning is-dismissible notice-blink">
+=======
+    <div id="biglytech-dropship-notification" class="notice notice-warning is-dismissible notice-blink">
+>>>>>>> 29f05d4d75d22b562a73ebd7fefe359c6ac6db80
         <p>Bigly Dropship Syncing Products...</p>
     </div>
 </div>
@@ -25,17 +29,17 @@
     notifier.hide();
     function sendRequest() {
         notifier.show();
-		$.post('admin-ajax.php', {action: 'blds_sync'}, function(res) {
+	$.post('admin-ajax.php', {action: 'blds_sync'}, function(res) {
             notifier.hide();
-			if(res.status === 'ok') {
-				return handleResponse(res);
-			}
-			if(res.redirect) {
-				if( res.message && !confirm(res.message)) {
-					return;
-				}
-				window.location.href = res.redirect;
-                return;
+	if(res.status === 'ok') {
+		return handleResponse(res);
+	}
+	if(res.redirect) {
+		if( res.message && !confirm(res.message)) {
+			return;
+		}
+		window.location.href = res.redirect;
+return;
 			}
             alert(res.message);
 		}).always(function() {
