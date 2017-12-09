@@ -13,6 +13,7 @@ class SyncController extends Controller
 {
     protected $hasMore = false;
     protected $request;
+    
     public function __construct()
     {
         parent::__construct();
@@ -52,13 +53,15 @@ class SyncController extends Controller
                 $this->categories($res->categories);
             }
             
-            if ($res->products) {
+            if (isset($res->products)) {
                 $this->products($res->products);
             }
         } catch (Exception $e) {
             return $e->getLine();
         }
-        
+
+        add_option($this->config->get('options.syncedAt'), time(), '', true);
+
         return [
             'status' => 'ok',
             'hasMore' => $this->hasMore,
@@ -347,5 +350,13 @@ class SyncController extends Controller
 
     protected function arrayToQuery()
     {
+    }
+    protected function checkForUpdate()
+    {
+        $lastUpdate = get_option($this->config->get('syncedAt')) ?: 0;
+        $lastCheck = time() - $lastUpdate;
+        if($lastCheck > (4 * 60 * 60) ) {
+            $this->view('check-for-update.php');
+        }
     }
 }

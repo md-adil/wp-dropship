@@ -78,8 +78,7 @@ class Controller
     {
         return function () use ($callable) {
             list($class, $method) = explode('@', $callable);
-            $prefix = '\Bigly\Dropship\Controllers';
-            $className = $prefix . '\\' . $class;
+            $className = __NAMESPACE__ . '\\' . $class;
             if (!isset(static::$instances[$className])) {
                 static::$instances[$className] = new $className;
             }
