@@ -13,6 +13,7 @@ class SyncController extends Controller
 {
     protected $hasMore = false;
     protected $request;
+    
     public function __construct()
     {
         parent::__construct();
@@ -32,11 +33,11 @@ class SyncController extends Controller
                     'redirect' => 'admin.php?page=' . 'bigly-dropship/credentials'
                 ];
             }
-
             if ($responseCode !== 200) {
                 return [
                     'status' => 'fail',
-                    'message' => 'Something went wrong'
+                    'message' => 'Something went wrong',
+                    'response_code' => $responseCode
                 ];
             }
 
@@ -52,13 +53,15 @@ class SyncController extends Controller
                 $this->categories($res->categories);
             }
             
-            if ($res->products) {
+            if (isset($res->products)) {
                 $this->products($res->products);
             }
         } catch (Exception $e) {
             return $e->getLine();
         }
-        
+
+        add_option($this->config->get('options.syncedAt'), time(), '', true);
+
         return [
             'status' => 'ok',
             'hasMore' => $this->hasMore,
@@ -315,24 +318,19 @@ class SyncController extends Controller
 
     private function insertAttachments($product, $postId)
     {
-
-        if (!isset($product)) {
+        if (!isset($product->media) || !$product->media) {
             return;
         }
-        if (!isset($product->media) || !$pdroduct->media) {
-            return;
-        }
-        
         foreach ($product->media as $media) {
             $attachment = wp_insert_attachment([
                 'guid' => $media->large,
-                'post_mime_type' => $media->mime,
-                'caption' => $media->caption
+                'post_mime_type' => $media->mime ?: 'image/jpeg',
+                'post_excerpt' => $media->caption ?: ''
             ], false, $postId, true);
             if ($attachment instanceof WP_Error) {
+                // $err = $attachment->get_error_messages();
                 continue;
             }
-
             if ($media->default) {
                 set_post_thumbnail($postId, $attachment);
             }
@@ -352,5 +350,13 @@ class SyncController extends Controller
 
     protected function arrayToQuery()
     {
+    }
+    protected function checkForUpdate()
+    {
+        $lastUpdate = get_option($this->config->get('syncedAt')) ?: 0;
+        $lastCheck = time() - $lastUpdate;
+        if($lastCheck > (4 * 60 * 60) ) {
+            $this->view('check-for-update.php');
+        }
     }
 }

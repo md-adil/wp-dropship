@@ -6,7 +6,8 @@ return [
     ],
 
     'options' => [
-        'access_token' => 'blds_access_token'
+        'access_token' => 'blds_access_token',
+        'syncedAt' => 'blds_synced_at'
     ],
 
     'paths' => [

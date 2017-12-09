@@ -7,12 +7,14 @@ class OrderController extends Controller
 {
     protected $request;
 
-    protected function placed($orderId)
+    function __construct()
     {
         $this->request = new Client($this->config);
+    }
+    protected function placed($orderId)
+    {
         $order = new WC_Order($orderId);
         $this->create($order);
-
     }
 
     protected function create(WC_Order $order)
@@ -64,7 +66,7 @@ class OrderController extends Controller
         $orderId = $this->getMappingId($order->get_id());
         
         if (!$orderId) {
-            return $this->create(new WC_Order($postId));
+            return;
         }
 
         $res = $this->request->withAuth()->post('api/orders/' . $orderId, [
@@ -77,7 +79,7 @@ class OrderController extends Controller
 
     protected function getMappingId($id)
     {
-        $table = $this->config->get('tables.order');
+        $table = $this->config->get('tables.sync');
         return $this->db->get_var("SELECT guest_id as order_id FROM {$table} WHERE type='order' AND host_id={$id}");
     }
 

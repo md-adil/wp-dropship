@@ -45,7 +45,8 @@ class CredentialController extends Controller
             && json_last_error() !== JSON_ERROR_NONE) {
             return [
                 'status' => 'fail',
-                'message' => 'Something went wrong while accessing credentials.'
+                'message' => 'Something went wrong while accessing credentials.',
+                'error' => 'Invalid json response'
             ];
         }
         if (isset($res->error)) {
