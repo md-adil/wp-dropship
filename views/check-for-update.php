@@ -15,11 +15,10 @@
     }
 </style>
 <div class="wrap" style="width: 30%; margin: 0 auto">
-<<<<<<< HEAD
+
     <div id="blds-notification" class="notice notice-warning is-dismissible notice-blink">
-=======
-    <div id="biglytech-dropship-notification" class="notice notice-warning is-dismissible notice-blink">
->>>>>>> 29f05d4d75d22b562a73ebd7fefe359c6ac6db80
+
+
         <p>Bigly Dropship Syncing Products...</p>
     </div>
 </div>
