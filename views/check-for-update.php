@@ -15,14 +15,17 @@
     }
 </style>
 <div class="wrap" style="width: 30%; margin: 0 auto">
-    <div class="notice notice-warning is-dismissible notice-blink">
+    <div id="biglytech-dropship-notification" class="notice notice-warning is-dismissible notice-blink">
         <p>Bigly Dropship Syncing Products...</p>
     </div>
 </div>
 <script>
 (function($) {
+    var notify = $('#biglytech-dropship-notification').hide();
     function sendRequest() {
+        notify.show();
 		$.post('admin-ajax.php', {action: 'blds_sync'}, function(res) {
+            notify.hide();
 			if(res.status === 'ok') {
 				return handleResponse(res);
 			}
