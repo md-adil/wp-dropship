@@ -22,8 +22,8 @@ class CredentialController extends Controller
 
     public function getAccessToken()
     {
+        $tokenUrl = $this->config->get('remote.access_token');
         $optionkey = $this->config->get('options.access_token');
-        $tokenUrl = $this->config->get('remote.base') . '/' . $this->config->get('remote.access_token');
         $res = $this->request->post($tokenUrl, [
             'body' => [
                 'grant_type' => 'password',
@@ -33,6 +33,12 @@ class CredentialController extends Controller
                 'password' => $_POST['password']
             ]
         ]);
+        if($res instanceOf \WP_Error) {
+            return [
+                'status' => 'fail',
+                'message' => $res->get_error_messages()
+            ];
+        }
         $res = json_decode($res['body']);
 
         if ($res === null

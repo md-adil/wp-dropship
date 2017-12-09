@@ -44,6 +44,7 @@ require(__DIR__ . '/../includes/header.php');
 	}
 
 	function handleResponse(res) {
+		
 		addMessage("Data synced: Category - " + res.data.categories + ', Product - ' + res.data.products);
 		if(res.hasMore) {
 			page ++;

@@ -95,7 +95,8 @@ class SyncController extends Controller
     protected function createCategory($category)
     {
         $parentId = 0;
-        if ($category->parent_id) {
+
+        if (isset($category->parent_id) && $category->parent_id) {
             $parentId = $this->getTermId($category->parent_id);
         }
 
@@ -146,9 +147,8 @@ class SyncController extends Controller
         if (!$category->parent_id) {
             return 0;
         }
-        global $wpdb;
         $tableName = $this->config->get('table.sync');
-        $parentId = $wpdb->get_var("SELECT host_id FROM {$tableName} WHERE guest_id={$category->parent_id} AND type='category'");
+        $parentId = $this->db->get_var("SELECT host_id FROM {$tableName} WHERE guest_id={$category->parent_id} AND type='category'");
         return $parentId ?: 0;
     }
 
@@ -218,6 +218,7 @@ class SyncController extends Controller
         $data = array_filter($data);
         $post = wp_insert_post($data, true);
         $this->insertProductMapping($product, $post);
+
         $this->insertPostMeta($post, $product);
         $this->insertAttachments($product, $post);
     }
@@ -314,10 +315,14 @@ class SyncController extends Controller
 
     private function insertAttachments($product, $postId)
     {
-        if (!isset($product->media) || !$product->media) {
+
+        if (!isset($product)) {
             return;
         }
-
+        if (!isset($product->media) || !$pdroduct->media) {
+            return;
+        }
+        
         foreach ($product->media as $media) {
             $attachment = wp_insert_attachment([
                 'guid' => $media->large,

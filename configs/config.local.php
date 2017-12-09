@@ -2,6 +2,6 @@
 
 return [
     'remote' => [
-        'base' => 'http://dropship.dev'
+        'base' => 'http://localhost:8000'
     ]
 ];
