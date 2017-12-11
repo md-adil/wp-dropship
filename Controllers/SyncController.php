@@ -328,7 +328,8 @@ class SyncController extends Controller
                 'post_excerpt' => $media->caption ?: ''
             ], false, $postId, true);
             if ($attachment instanceof WP_Error) {
-                // $err = $attachment->get_error_messages();
+                $err = $attachment->get_error_messages();
+                
                 continue;
             }
             if ($media->default) {
