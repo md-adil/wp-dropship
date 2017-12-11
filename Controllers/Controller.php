@@ -82,7 +82,7 @@ class Controller
             if (!isset(static::$instances[$className])) {
                 static::$instances[$className] = new $className;
             }
-            $response = call_user_func([static::$instances[$className], $method]);
+            $response = call_user_func_array([static::$instances[$className], $method], func_get_args());
             if (is_array($response)) {
                 echo wp_send_json($response);
             } elseif ($response) {

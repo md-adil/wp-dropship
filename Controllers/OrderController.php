@@ -1,5 +1,6 @@
 <?php
 namespace Bigly\Dropship\Controllers;
+
 use WC_Order;
 use Bigly\Dropship\Library\Client;
 
@@ -7,11 +8,11 @@ class OrderController extends Controller
 {
     protected $request;
 
-    function __construct()
+    public function __construct()
     {
         $this->request = new Client($this->config);
     }
-    protected function placed($orderId)
+    public function placed($orderId)
     {
         $order = new WC_Order($orderId);
         $this->create($order);
@@ -19,7 +20,7 @@ class OrderController extends Controller
 
     protected function create(WC_Order $order)
     {
-        $products = $this->getOrderItems($order);
+        $products = $this->getOrderItemsId($order);
         if (!$products) {
             return;
         }
@@ -39,6 +40,10 @@ class OrderController extends Controller
             ]
         ]);
 
+        if ($res instanceof \WP_Error) {
+            // HAndle message
+        }
+
         $data = json_decode($res['body']);
         $orderId = $data->id;
         $this->insertMapping($order, $orderId);
@@ -48,15 +53,15 @@ class OrderController extends Controller
     {
         $items = $order->get_items();
         $posts = [];
-        $product = [];
+        $products = [];
         foreach ($items as $item) {
             $posts[] = $item['product_id'];
         }
-        $table = $this->config->get('tables.product');
+        $table = $this->config->get('tables.sync');
         $results = $this->db->get_results("SELECT guest_id as product_id FROM {$table} WHERE type='product' AND host_id IN " . implode(',', $posts), OBJECT);
 
         foreach ($results as $row) {
-            $product[] = $row->product_id;
+            $products[] = $row->product_id;
         }
         return $products;
     }
@@ -103,9 +108,14 @@ class OrderController extends Controller
         $this->update($orderId, ['status' => 'failed']);
     }
 
-    protected function onHold($orderId)
+    public function onHold($orderId)
     {
-        $this->update($orderId, ['status' => 'on-hold']);
+        $order = new WC_Order($orderId);
+        try {
+            $this->create($order);
+        } catch (\Exception $e) {
+            die($e->getMessage());
+        }
     }
 
     protected function refunded($orderId)

@@ -35,11 +35,12 @@ add_action('wp_ajax_blds_sync', Controller::resolve('SyncController@sync'));
 register_activation_hook(BIGLY_DROPSHIP_FILE, Controller::resolve('ActivationController@activate'));
 register_deactivation_hook(BIGLY_DROPSHIP_FILE, Controller::resolve('ActivationController@deactivate'));
 
+// add_action('admin_print_footer_scripts', Controller::resolve('SyncController@checkForUpdate'));
 // Woocommers Hooks
+
+add_action('woocommerce_order_status_on-hold', Controller::resolve('OrderController@onHold'), 10, 1);
 add_action('woocommerce_new_order', Controller::resolve('OrderController@placed'), 10, 1);
 add_action('woocommerce_order_status_completed', Controller::resolve('OrderController@completed'), 10, 1);
 add_action('woocommerce_order_status_failed', Controller::resolve('OrderController@failed'), 10, 1);
-add_action('woocommerce_order_status_on-hold', Controller::resolve('OrderController@onHold'), 10, 1);
 add_action('woocommerce_order_status_refunded', Controller::resolve('OrderController@refunded'), 10, 1);
 add_action('woocommerce_order_status_cancelled', Controller::resolve('OrderController@cancelled'), 10, 1);
-add_action('admin_print_footer_scripts', Controller::resolve('SyncController@checkForUpdate'));

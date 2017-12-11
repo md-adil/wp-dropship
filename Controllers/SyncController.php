@@ -355,7 +355,7 @@ class SyncController extends Controller
     {
         $lastUpdate = get_option($this->config->get('syncedAt')) ?: 0;
         $lastCheck = time() - $lastUpdate;
-        if($lastCheck > (4 * 60 * 60) ) {
+        if ($lastCheck > (4 * 60 * 60)) {
             $this->view('check-for-update.php');
         }
     }
