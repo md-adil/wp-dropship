@@ -23,6 +23,15 @@ class Controller
         }
         $this->setConfig();
     }
+    public function dd() {
+        echo '<pre>';
+        foreach(func_get_args() as $arg) {
+            print_r($arg);
+        }
+        echo '</pre>';
+        die();
+    }
+
 
     protected function setConfig()
     {

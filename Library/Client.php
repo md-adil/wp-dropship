@@ -42,6 +42,15 @@ class Client
         return $clone;
     }
 
+    public function put($uri, $options = [])
+    {
+        if(!isset($options['body'])) {
+            $options['body']  = [];
+        }
+        $options['body']['_method'] = 'put';
+        return $this->request('post', $uri, $options);
+    }
+
     public function __call($fn, $args)
     {
         $options = array();

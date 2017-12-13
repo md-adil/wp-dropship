@@ -163,13 +163,7 @@ class SyncController extends Controller
         if (!isset($term['term_id'])) {
             return;
         }
-        global $wpdb;
-        $tableName = $this->config->get('tables.sync');
-        $wpdb->insert($tableName, [
-            'host_id' => $term['term_id'],
-            'guest_id' => $category->id,
-            'type' => 'category'
-        ]);
+        $this->insertMapping($category->id, $term['term_id'], 'category');
     }
 
     public function products($products)
@@ -304,16 +298,16 @@ class SyncController extends Controller
         if ($post instanceof WP_Error) {
             return;
         }
-        $tableName = $this->config->get('tables.sync');
-        $this->db->insert($tableName, [
-            'guest_id' => $product->id,
-            'host_id' => $post,
-            'type' => 'category'
-        ]);
+       $this->insertMapping($product->id, $post, 'product');
     }
 
-    public function test()
-    {
+    protected function insertMapping($guestId, $hostId, $type) {
+        $tableName = $this->config->get('tables.sync');
+        $this->db->insert($tableName, [
+            'guest_id' => $guestId,
+            'host_id' => $hostId,
+            'type' => $type
+        ]);
     }
 
     private function insertAttachments($product, $postId)

@@ -2,6 +2,7 @@
 namespace Bigly\Dropship\Controllers;
 
 use WC_Order;
+use WP_Error;
 use Bigly\Dropship\Library\Client;
 
 class OrderController extends Controller
@@ -10,21 +11,24 @@ class OrderController extends Controller
 
     public function __construct()
     {
+        @parent::__construct();
         $this->request = new Client($this->config);
     }
-    public function placed($orderId)
+    
+    protected function orderExists(WC_Order $order)
     {
-        $order = new WC_Order($orderId);
-        $this->create($order);
+        return $this->getMappingId($order->get_id());
     }
 
     protected function create(WC_Order $order)
     {
-        $products = $this->getOrderItemsId($order);
+        $products = $this->getOrderItems($order);
         if (!$products) {
             return;
         }
-
+        if($guestId = $this->orderExists($order)) {
+            return $this->update($order, ['status' =>'placed'], $guestId);
+        }
         $res = $this->request->withAuth()->post('api/orders', [
             'header' => [
                 'content-type' => 'application/json'
@@ -32,6 +36,7 @@ class OrderController extends Controller
             'body' => [
                 'name' => $order->get_order_key(),
                 'customer_id' => $order->get_customer_id('billing'),
+                'amount' => $order->get_total(),
                 'customer_note' => $order->get_customer_note(),
                 'shipping' => $order->get_address('shipping'),
                 'billing' => $order->get_address('billing'),
@@ -40,41 +45,49 @@ class OrderController extends Controller
             ]
         ]);
 
-        if ($res instanceof \WP_Error) {
-            // HAndle message
+        if ($res instanceof WP_Error) {
+            echo 'Service Error';
+            return;
         }
-
         $data = json_decode($res['body']);
+        if(!$data) {
+            echo 'Error get response';
+            return;
+        }
         $orderId = $data->id;
         $this->insertMapping($order, $orderId);
     }
 
-    protected function getOrderItemsId(WC_Order $order)
+    protected function getOrderItems(WC_Order $order)
     {
         $items = $order->get_items();
         $posts = [];
-        $products = [];
         foreach ($items as $item) {
-            $posts[] = $item['product_id'];
+            $posts[$item['product_id']] = $item;
         }
-        $table = $this->config->get('tables.sync');
-        $results = $this->db->get_results("SELECT guest_id as product_id FROM {$table} WHERE type='product' AND host_id IN " . implode(',', $posts), OBJECT);
 
+        $table = $this->config->get('tables.sync');
+        $results = $this->db->get_results("SELECT guest_id as product, host_id as post FROM {$table} WHERE type='product' AND host_id IN (" . implode(',', array_keys($posts)) . ')', OBJECT);
+
+        $products = [];
         foreach ($results as $row) {
-            $products[] = $row->product_id;
+            $products[] = [
+                'id' => $row->product,
+                'name' => $posts[$row->post]['name'],
+                'quantity' => $posts[$row->post]['quantity'],
+                'amount' => $posts[$row->post]['total']
+            ];
         }
         return $products;
     }
 
-    public function update($postId, $data)
+    protected function update($postId, $data, $orderId = null)
     {
-        $orderId = $this->getMappingId($order->get_id());
-        
+        $orderId = $orderId ?: $this->getMappingId($postId);
         if (!$orderId) {
             return;
         }
-
-        $res = $this->request->withAuth()->post('api/orders/' . $orderId, [
+        return $this->request->withAuth()->put('api/orders/' . $orderId, [
             'header' => [
                 'content-type' => 'application/json'
             ],
@@ -98,33 +111,38 @@ class OrderController extends Controller
         ]);
     }
 
-    protected function completed($orderId)
-    {
+    public function completed($orderId)
+    { 
         $this->update($orderId, ['status' => 'completed']);
     }
 
-    protected function failed($orderId)
+    public function failed($orderId)
     {
         $this->update($orderId, ['status' => 'failed']);
     }
 
+    public function processing($id) {
+        $this->update($orderId, ['status' => 'processing']);
+    }
+
     public function onHold($orderId)
     {
-        $order = new WC_Order($orderId);
-        try {
-            $this->create($order);
-        } catch (\Exception $e) {
-            die($e->getMessage());
-        }
+        $this->update($orderId, ['status' => 'on-hold']);
     }
 
-    protected function refunded($orderId)
+    public function refunded($orderId)
     {
-        $this->update($orderId, ['status' => 'refund']);
+        $this->update($orderId, ['status' => 'refunded']);
     }
 
-    protected function cancelled($orderId)
+    public function cancelled($orderId)
     {
-        $this->update($orderId, ['status' => 'cancelled']);
+       $this->update($orderId, ['status' => 'cancelled']);
+    }
+
+    public function placed($orderId)
+    {
+       $order = new WC_Order($orderId);
+       $this->create($order);
     }
 }
