@@ -122,7 +122,7 @@ class OrderController extends Controller
     }
 
     public function processing($id) {
-        $this->update($orderId, ['status' => 'processing']);
+        $this->update($id, ['status' => 'processing']);
     }
 
     public function onHold($orderId)
@@ -142,6 +142,7 @@ class OrderController extends Controller
 
     public function placed($orderId)
     {
+
        $order = new WC_Order($orderId);
        $this->create($order);
     }
