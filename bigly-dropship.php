@@ -59,6 +59,7 @@ add_filter('image_downsize', function($f, $id, $size) use( $sizes ) {
 }, 10, 3);
 
 // Initialize
+
 function run_biglydropship()
 {
     require(__DIR__ . '/routes.php');
