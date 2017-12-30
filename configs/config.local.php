@@ -1,6 +1,6 @@
 <?php
 return [
     'remote' => [
-        'base' => 'http://dropship.dev'
+        'base' => 'http://127.0.0.1:8000/'
     ]
 ];

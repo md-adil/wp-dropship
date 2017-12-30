@@ -24,7 +24,6 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Initialize
 function run_biglydropship()
 {
     require(__DIR__ . '/routes.php');
