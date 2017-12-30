@@ -263,7 +263,7 @@ class SyncController extends Controller
     {
         $postId = $this->getPostId($product->id);
         if (!$postId) {
-            return $this->createProduct($product);
+            return;
         }
 
         $data = $this->preparePost($product);
@@ -347,7 +347,7 @@ class SyncController extends Controller
             $conds[] = "{$key}='{$val}'";
         }
         $conds = implode(' AND ', $conds);
-        $this->db->get_var("SELECT {$var} FROM {$tableName} WHERE $conds");
+        return $this->db->get_var("SELECT {$var} FROM {$tableName} WHERE $conds");
     }
 
     protected function arrayToQuery()
