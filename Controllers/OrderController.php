@@ -49,7 +49,11 @@ class OrderController extends Controller
             echo 'Service Error';
             return;
         }
+         //print_r($res);
+         //die("===");
+
         $data = json_decode($res['body']);
+
         if(!$data) {
             echo 'Error get response';
             return;

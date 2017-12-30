@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 use Bigly\Dropship\Controllers\Controller;
 
@@ -45,3 +45,5 @@ add_action('woocommerce_order_status_completed', Controller::resolve('OrderContr
 add_action('woocommerce_order_status_failed', Controller::resolve('OrderController@failed'), 10, 1);
 add_action('woocommerce_order_status_refunded', Controller::resolve('OrderController@refunded'), 10, 1);
 add_action('woocommerce_order_status_cancelled', Controller::resolve('OrderController@cancelled'), 10, 1);
+
+// add_filter('wp_get_attachment_image_src', Controller::resolve('HomeController@media'));

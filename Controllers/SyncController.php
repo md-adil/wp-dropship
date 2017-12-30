@@ -315,20 +315,27 @@ class SyncController extends Controller
         if (!isset($product->media) || !$product->media) {
             return;
         }
+        $switch = false;
         foreach ($product->media as $media) {
             $attachment = wp_insert_attachment([
                 'guid' => $media->large,
                 'post_mime_type' => $media->mime ?: 'image/jpeg',
-                'post_excerpt' => $media->caption ?: ''
+                'post_excerpt' => $media->caption ?: '',
+                'post_content' => 'biglydropship'
             ], false, $postId, true);
+           // dd($attachment);
             if ($attachment instanceof WP_Error) {
                 $err = $attachment->get_error_messages();
-                
                 continue;
             }
+            $switch = $attachment;
             if ($media->default) {
+                $switch = true;
                 set_post_thumbnail($postId, $attachment);
             }
+        }
+        if($switch !== true) {
+            set_post_thumbnail($postId, $switch);
         }
     }
 
