@@ -81,7 +81,7 @@ class SyncController extends Controller
         foreach ($categories as $category) {
             switch ($category->action) {
                 case 'create':
-                    return $this->createCategory($category);
+                    $this->createCategory($category);
                     break;
                 case 'update':
                     $this->updateCategory($category);
@@ -98,7 +98,6 @@ class SyncController extends Controller
     protected function createCategory($category)
     {
         $parentId = 0;
-
         if (isset($category->parent_id) && $category->parent_id) {
             $parentId = $this->getTermId($category->parent_id);
         }
@@ -108,7 +107,10 @@ class SyncController extends Controller
             'parent' => $parentId ?: 0
         ]);
 
-        return $this->insertCategoryMapping($category, $term);
+        if(!$term instanceof WP_Error) {
+            $this->insertCategoryMapping($category, $term);
+        }
+        return $term;
     }
 
     protected function updateCategory($category)
@@ -141,25 +143,11 @@ class SyncController extends Controller
 
     protected function getTermId($id)
     {
-        $tableName = $this->config->get('table.sync');
-        return $this->db->get_var("SELECT host_id FROM {$tableName} WHERE guest={$id} AND type='category'");
-    }
-
-    private function getCategoryParent($category)
-    {
-        if (!$category->parent_id) {
-            return 0;
-        }
-        $tableName = $this->config->get('table.sync');
-        $parentId = $this->db->get_var("SELECT host_id FROM {$tableName} WHERE guest_id={$category->parent_id} AND type='category'");
-        return $parentId ?: 0;
+        return $this->getVar('host_id', [ 'guest_id' => $id, 'type' => 'product' ]);
     }
 
     private function insertCategoryMapping($category, $term)
     {
-        if ($term instanceof WP_Error) {
-            return;
-        }
         if (!isset($term['term_id'])) {
             return;
         }
@@ -193,9 +181,10 @@ class SyncController extends Controller
     protected function preparePost($product)
     {
         $categories = [];
+        
         if (isset($product->categories)) {
             $categories = array_map(function ($cat) {
-                return $cat->id;
+                return $this->getTermId($cat->id);
             }, $product->categories);
         }
 
@@ -205,7 +194,9 @@ class SyncController extends Controller
             'post_excerpt' => $this->ifset($product->excerpt),
             'post_status' => 'publish',
             'post_type' => 'product',
-            'post_category' => $categories
+            'tax_input' => [
+                'product_cat' => $categories
+            ]
         ];
     }
 
