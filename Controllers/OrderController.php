@@ -41,6 +41,7 @@ class OrderController extends Controller
                 'shipping' => $order->get_address('shipping'),
                 'billing' => $order->get_address('billing'),
                 'products' => $products,
+                'payment_method' => $order->get_payment_method(),
                 'status' => $order->get_status()
             ]
         ]);

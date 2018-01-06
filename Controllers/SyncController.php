@@ -49,6 +49,7 @@ class SyncController extends Controller
                     'message' => 'Unable to fetch records, something might went wrong.'
                 ];
             }
+
             if (isset($res->categories)) {
                 $this->categories($res->categories);
             }
@@ -143,7 +144,7 @@ class SyncController extends Controller
 
     protected function getTermId($id)
     {
-        return $this->getVar('host_id', [ 'guest_id' => $id, 'type' => 'product' ]);
+        return $this->getVar('host_id', [ 'guest_id' => $id, 'type' => 'category' ]);
     }
 
     private function insertCategoryMapping($category, $term)
@@ -306,7 +307,8 @@ class SyncController extends Controller
         if (!isset($product->media) || !$product->media) {
             return;
         }
-        $switch = false;
+        $defaultImage = null;
+        $attachments = [];
         foreach ($product->media as $media) {
             $attachment = wp_insert_attachment([
                 'guid' => $media->large,
@@ -314,20 +316,22 @@ class SyncController extends Controller
                 'post_excerpt' => $media->caption ?: '',
                 'post_content' => 'biglydropship'
             ], false, $postId, true);
-           // dd($attachment);
+           
             if ($attachment instanceof WP_Error) {
                 $err = $attachment->get_error_messages();
                 continue;
             }
-            $switch = $attachment;
             if ($media->default) {
-                $switch = true;
-                set_post_thumbnail($postId, $attachment);
+                $defaultImage = $attachment;
+            } else {
+                $attachments[] = $attachment;
             }
         }
-        if($switch !== true) {
-            set_post_thumbnail($postId, $switch);
+        if(!$defaultImage) {
+            $defaultImage = array_unshift($attachments);
         }
+        set_post_thumbnail($postId, $defaultImage);
+        update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
     }
 
     protected function getVar($var, $queries = array())

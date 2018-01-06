@@ -31,24 +31,17 @@ $sizes = [
      
 ];
 
-
+$count = 0;
 add_filter('image_downsize', function($f, $id, $size) use( $sizes ) {
-  
-    $width = $height = 0;
+    global $count;
+    $width = 1024; $height = 1024;
     $is_intermediate = false;
     if(!$id) return;
+    $count ++;
+    // echo 'count-id:' . $id . '-' . $count;
     $post = get_post($id);
     if(!$post) return;
     if(!$post->post_content === 'biglydropship') return;
-    if($size == 'thumbnail' ) {
-    if ( ($thumb_file = wp_get_attachment_thumb_file($id)) && $info = getimagesize($thumb_file) ) 
-    {
-            $img_url = str_replace($img_url_basename, wp_basename($thumb_file), $img_url);
-            $width = $info[0];
-            $height = $info[1];
-            $is_intermediate = true;
-        }
-    }
     return [
         $post->guid,
         $width,

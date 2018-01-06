@@ -33,6 +33,7 @@ class CredentialController extends Controller
                 'password' => $_POST['password']
             ]
         ]);
+        
         if($res instanceOf \WP_Error) {
             return [
                 'status' => 'fail',
@@ -40,6 +41,8 @@ class CredentialController extends Controller
             ];
         }
         $res = json_decode($res['body']);
+      
+
 
         if ($res === null
             && json_last_error() !== JSON_ERROR_NONE) {
