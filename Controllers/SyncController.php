@@ -328,10 +328,14 @@ class SyncController extends Controller
             }
         }
         if(!$defaultImage) {
-            $defaultImage = array_unshift($attachments);
+            $defaultImage = array_shift($attachments);
         }
-        set_post_thumbnail($postId, $defaultImage);
-        update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
+        if($defaultImage) {
+            set_post_thumbnail($postId, $defaultImage);
+        }
+        if($attachments) {
+            update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
+        }
     }
 
     protected function getVar($var, $queries = array())
