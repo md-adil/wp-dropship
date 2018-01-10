@@ -8,7 +8,15 @@ class ActivationController extends Controller
 {
     public function activate()
     {
-        $this->createTables();
+        if ( is_plugin_active( 'woocommerce/woocommerce.php' ) )
+        {  
+               $this->createTables();
+        }
+        else
+        {
+            $error_message = "This plugin requires WooCommerce plugins to be active!";
+            die($error_message);
+        }   
     }
 
     public function createTables()
