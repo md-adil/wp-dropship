@@ -140,6 +140,7 @@ class SyncController extends Controller
         wp_delete_term($termId, 'product_cat', [
             'force_default' => true
         ]);
+        $this->deleteMapping($category->id, 'category');
     }
 
     protected function getTermId($id)
@@ -277,7 +278,7 @@ class SyncController extends Controller
         global $wpdb;
         $tableName = $this->config->get('tables.sync');
         wp_delete_post($postId, true);
-        $wpdb->delete($tableName, ['guest_id' => $product->id, 'type'=>'product']);
+        $this->deleteMapping($product->id, 'product');
     }
 
     public function getPostId($id)
@@ -304,6 +305,15 @@ class SyncController extends Controller
         $this->db->insert($tableName, [
             'guest_id' => $guestId,
             'host_id' => $hostId,
+            'type' => $type
+        ]);
+    }
+
+    protected function deleteMapping($guestId, $type) {
+        $tableName = $this->config->get('tables.sync');
+
+        $this->db->delete($tableName, [
+            'guest_id' => $guestId,
             'type' => $type
         ]);
     }
