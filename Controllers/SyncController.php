@@ -295,6 +295,12 @@ class SyncController extends Controller
 
     protected function insertMapping($guestId, $hostId, $type) {
         $tableName = $this->config->get('tables.sync');
+
+        $this->db->delete($tableName, [
+            'guest_id' => $guestId,
+            'type' => $type
+        ]);
+        
         $this->db->insert($tableName, [
             'guest_id' => $guestId,
             'host_id' => $hostId,
