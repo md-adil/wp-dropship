@@ -29,6 +29,7 @@ require(__DIR__ . '/../includes/header.php');
 		btn.addClass('blds-preloader');
 		addMessage("Sending request for page " + page, 'warning');
 		$.post('admin-ajax.php', {action: 'blds_sync'}, function(res) {
+			btn.removeClass('blds-preloader');
 			if(res.status === 'ok') {
 				return handleResponse(res);
 			}
@@ -37,9 +38,15 @@ require(__DIR__ . '/../includes/header.php');
 					return;
 				}
 				window.location.href = res.redirect;
+				return;
 			}
-		}).always(function() {
+			if(res.status === 'fail') {
+				addMessage(res.message, 'error');
+			}
+
+		}).error(function(err) {
 			btn.removeClass('blds-preloader');
+			addMessage(err.statusText);
 		});
 	}
 
