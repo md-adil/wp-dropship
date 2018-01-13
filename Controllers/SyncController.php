@@ -22,6 +22,7 @@ class SyncController extends Controller
 
     public function sync()
     {
+        set_time_limit(60);
         try {
             $syncPath = $this->config->get('remote.sync');
             $res = $this->request->withAuth()->get($syncPath);
@@ -36,7 +37,7 @@ class SyncController extends Controller
             if ($responseCode !== 200) {
                 return [
                     'status' => 'fail',
-                    'message' => 'Something went wrong',
+                    'message' => 'Something went wrong, response code: ' . $responseCode,
                     'response_code' => $responseCode
                 ];
             }
@@ -46,7 +47,7 @@ class SyncController extends Controller
             if (!$res) {
                 return [
                     'status' => 'fail',
-                    'message' => 'Unable to fetch records, something might went wrong.'
+                    'message' => 'Unable to parse records, Something might went wrong.'
                 ];
             }
 
@@ -297,16 +298,25 @@ class SyncController extends Controller
     protected function insertMapping($guestId, $hostId, $type) {
         $tableName = $this->config->get('tables.sync');
 
-        $this->db->delete($tableName, [
+        $exists = $this->getVar('COUNT(*)', [
             'guest_id' => $guestId,
             'type' => $type
         ]);
-        
-        $this->db->insert($tableName, [
-            'guest_id' => $guestId,
-            'host_id' => $hostId,
-            'type' => $type
-        ]);
+
+        if($exists) {
+            $this->db->update($tableName, [
+                'host_id' => $hostId,
+            ], [
+                'guest_id' => $guestId,
+                'type' => $type
+            ]);
+        } else {
+            $this->db->insert($tableName, [
+                'guest_id' => $guestId,
+                'host_id' => $hostId,
+                'type' => $type
+            ]);
+        }
     }
 
     protected function deleteMapping($guestId, $type) {

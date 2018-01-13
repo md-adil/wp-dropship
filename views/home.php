@@ -41,12 +41,12 @@ require(__DIR__ . '/../includes/header.php');
 				return;
 			}
 			if(res.status === 'fail') {
-				addMessage(res.message, 'error');
+				addMessage('Server Error: ' + res.message, 'error');
 			}
 
 		}).error(function(err) {
 			btn.removeClass('blds-preloader');
-			addMessage(err.statusText);
+			addMessage('Client Error: ' + err.statusText, 'error');
 		});
 	}
 
