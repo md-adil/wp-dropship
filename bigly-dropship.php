@@ -4,8 +4,15 @@
  * Plugin Name: Bigly Dropship
  * Plugin URI: dropship.biglytech.net
  * Description: Sell your product everywhere
- * Version: 0.1
- * Author: Md Adil <md-adil@live.com>
+ * Version: 1.0
+ * Author: Bigly Technologies PVT. Limited<info@biglytech.net>
+ * Author URI github.com/md-adil
+ *
+ *
+ * @package Bigly Dropship
+ * @category Ecommerce
+ * @author Md Adil <md-adil@live.com>
+ * @version 1.0
  */
 
 define('BIGLY_DROPSHIP_FILE', __FILE__);
