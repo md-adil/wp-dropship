@@ -22,7 +22,7 @@ class SyncController extends Controller
 
     public function sync()
     {
-        set_time_limit(60);
+        set_time_limit(60 * 5);
         try {
             $syncPath = $this->config->get('remote.sync');
             $res = $this->request->withAuth()->get($syncPath);
