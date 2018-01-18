@@ -2,7 +2,7 @@
     "name": "bigly/wp-dropship",
     "description": "BiglyTechnology Dropship plugin for wordpress",
     "type": "wordpress-plugin",
-    "version": "0.01",
+    "version": "1.0",
     "authors": [
         {
             "name": "Md Adil",

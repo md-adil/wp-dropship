@@ -205,17 +205,21 @@ class SyncController extends Controller
 
     protected function createProduct($product)
     {
+        
         $data = $this->preparePost($product);
         $data = array_filter($data);
         $post = wp_insert_post($data, true);
         $this->insertProductMapping($product, $post);
-
+        $this->insertAttributes($product, $post);
         $this->insertPostMeta($post, $product);
         $this->insertAttachments($product, $post);
+         $this->insertAttributes($product, $post);
+        //update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
     }
 
     protected function preparePostMeta($product)
     {
+
         return array_filter([
             '_sku' => $this->ifset($product->sku),
             '_weight' => $this->ifset($product->weight),
@@ -363,7 +367,28 @@ class SyncController extends Controller
             update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
         }
     }
+    protected function insertAttributes($product, $postId)
+    {
+        $thedata = [];
+        if (!isset($product->attributes) || !$product->attributes) {
+            return;
+        }
+        
+        foreach ($product->attributes as $attribute) {
+            wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name);
+            $term_taxonomy_ids = wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name, true );
+            $thedata[$attribute->name] = [
+               'name' => $attribute->name, 
+               'value'=> $attribute->pivot->value,
+               'position' => '0',
+               'is_visible' => '1',
+               'is_variation' => '1',
+               'is_taxonomy' => '0'
+            ];
+        }
 
+        update_post_meta( $postId,'_product_attributes',$thedata);
+    }
     protected function getVar($var, $queries = array())
     {
         $tableName = $this->config->get('tables.sync');
