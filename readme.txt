@@ -8,12 +8,12 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Welcome to Bigly, We introduce Bigly Dropship Plugin for Wordpress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. Bigly Dropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, Wordpress and Woo-Commerce is one of major compatible platform for Bigly Dropship.
+Welcome to Bigly, We introduce BiglyDropship Plugin for Wordpress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, Wordpress and Woo-Commerce is one of major compatible platform for BiglyDropship.
 
 == Description ==
 
 Prerequisites
-Things you need to Setup Bigly Dropship Plugin, A Wordpress platform, and a well known E-Commerce Plugin to Show case Your products - Woo Commerce. these are two things to basically u need to use our service.
+Things you need to Setup BiglyDropship Plugin, A Wordpress platform, and a well known E-Commerce Plugin to Show case Your products - Woo Commerce. these are two things to basically u need to use our service.
 
 Installing
 * Open your Wordpress Panel
@@ -25,13 +25,19 @@ Simply Download the ZIP file, link given Below.
 Link - https://github.com/md-adil/wp-dropship/archive/v1.zip
 
 * Choose the Downloaded File and Hit on Install Now Button
-Wordpress > plugins > Add New > Upload plugin > Choose File > Select Bigly Zip > Install Now
+Wordpress > plugins > Add New > Upload plugin > Choose File > Select BiglyDropship Zip > Install Now
 After Installing Plugin
-* Active Bigly Dropship
+* Active BiglyDropship
 * Click Add Credential
 * then Sync Products to fetch Products from dropship website
 How to get Credential
-Visit our website, Provide your Valid Detail that help us to recognize you as genuine Seller, afterwards kindly select the products added by supplier which you want to list in your web store, then generate the API, and you'll get ID , Name , API Key These will help you to list all products from Bigly Dropship to your Webstore.
+Visit our website, Provide your Valid Detail that help us to recognize you as genuine Seller, afterwards kindly select the products added by supplier which you want to list in your web store, then generate the API, and you'll get ID , Name , API Key These will help you to list all products from BiglyDropship to your Webstore.
+
+In refrence of making calls back to our own server
+We send remote request only when user click on sync button, not when page or plugin load. When user want to sync product from our platform to there platform, then user click on sync button to get access of our products.
+
+In refrence of offloading of images or code
+All images will be served from our server or any other client servers according to our application need. We have amazon s3 static hosting (http://s.bigly.io/) for images and most of images will served from here. 
 
 Our Website
 Biglytech
