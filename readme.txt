@@ -1,31 +1,29 @@
 === BiglyDropship ===
 Contributors: adil123, nikhiltiwari005, kamnamadhwani, sakshikbc, archanaweb, biglytech
 Donate link: http://www.bigly.io/
-Tags: Dropship, Dropshipping, BiglyDropship, woocommerce
+Tags: Dropship, Dropshipping, BiglyDropship, WooCommerce
 Requires at least: 4.9
 Tested up to: 4.9.4
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Welcome to Bigly, We introduce BiglyDropship Plugin for Wordpress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, Wordpress and Woo-Commerce is one of major compatible platform for BiglyDropship.
+Welcome to Bigly, We introduce BiglyDropship Plugin for WordPress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, WordPress and Woo-Commerce is one of major compatible platform for BiglyDropship.
 
 == Description ==
 
 Prerequisites
-Things you need to Setup BiglyDropship Plugin, A Wordpress platform, and a well known E-Commerce Plugin to Show case Your products - Woo Commerce. these are two things to basically u need to use our service.
+Things you need to Setup BiglyDropship Plugin, A WordPress platform, and a well known E-Commerce Plugin to Show case Your products - Woo Commerce. these are two things to basically u need to use our service.
 
 Installing
-* Open your Wordpress Panel
+* Open your WordPress Panel
 * Click on Plugins -> Add New
 * Here Click to Upload Plugin or Search Plugin
 If You Proceed with Upload Plugin
-Simply Download the ZIP file, link given Below.
 
-Link - https://github.com/md-adil/wp-dropship/archive/v1.zip
 
 * Choose the Downloaded File and Hit on Install Now Button
-Wordpress > plugins > Add New > Upload plugin > Choose File > Select BiglyDropship Zip > Install Now
+WordPress > plugins > Add New > Upload plugin > Choose File > Select BiglyDropship Zip > Install Now
 After Installing Plugin
 * Active BiglyDropship
 * Click Add Credential
@@ -44,14 +42,14 @@ Biglytech
 
 == Installation ==
 
-* Open your Wordpress Panel
+* Open your WordPress Panel
 * Click on Plugins -> Add New
 * Here Click to Upload Plugin or Search Plugin
 
 == Frequently asked questions ==
 
 1. Installation Instructions
-- Open your Wordpress Panel
+- Open your WordPress Panel
 - Click on Plugins -> Add New
 - Here Click to Upload Plugin or Search Plugin or get it from here
 - Activate the plugin through the plugins menu in WordPress.
@@ -84,17 +82,17 @@ Biglytech
 
 == Screenshots ==
 
-http://bigly.io/img/wordpress-plugin-screenshots/1.1.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/1.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/2.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/3.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/4.2.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/4.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/5.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/6.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/7.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/8.jpg
-http://bigly.io/img/wordpress-plugin-screenshots/9.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/1.1.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/1.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/2.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/3.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/4.2.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/4.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/5.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/6.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/7.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/8.jpg
+http://bigly.io/img/WordPress-plugin-screenshots/9.jpg
 
 == Changelog ==
 

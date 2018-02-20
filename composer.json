@@ -1,7 +1,7 @@
 {
     "name": "bigly/wp-dropship",
-    "description": "BiglyTechnology Dropship plugin for wordpress",
-    "type": "wordpress-plugin",
+    "description": "BiglyTechnology Dropship plugin for WordPress",
+    "type": "WordPress-plugin",
     "version": "1.0",
     "authors": [
         {
