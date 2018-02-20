@@ -8,12 +8,12 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Welcome to Bigly, We introduce BiglyDropship Plugin for WordPress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, WordPress and Woo-Commerce is one of major compatible platform for BiglyDropship.
+Welcome to Bigly, We introduce BiglyDropship Plugin for WordPress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, WordPress and WooCommerce is one of major compatible platform for BiglyDropship.
 
 == Description ==
 
 Prerequisites
-Things you need to Setup BiglyDropship Plugin, A WordPress platform, and a well known E-Commerce Plugin to Show case Your products - Woo Commerce. these are two things to basically u need to use our service.
+Things you need to Setup BiglyDropship Plugin, A WordPress platform, and a well known E-Commerce Plugin to Show case Your products - WooCommerce. these are two things to basically u need to use our service.
 
 Installing
 * Open your WordPress Panel
