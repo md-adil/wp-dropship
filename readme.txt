@@ -8,12 +8,11 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Welcome to Bigly, We introduce BiglyDropship Plugin for WordPress, which help to Ease E-Commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, WordPress and WooCommerce is one of major compatible platform for BiglyDropship.
+Welcome to Bigly, We introduce BiglyDropship Plugin for WordPress, which help to Ease E-commerce Marketing through out world to Explore the possiblities of B2B and B2C. BiglyDropshipping is fastest growing Service, this plugin insure the consumer satisfactory to fullest. We provide a simple platform to Export products from our website to multiple platforms, WordPress and WooCommerce is one of major compatible platform for BiglyDropship.
 
 == Description ==
 
-Prerequisites
-Things you need to Setup BiglyDropship Plugin, A WordPress platform, and a well known E-Commerce Plugin to Show case Your products - WooCommerce. these are two things to basically ypu need to use our service.
+Things you need to Setup BiglyDropship Plugin, A WordPress platform, and a well known E-commerce Plugin to Show case Your products - WooCommerce. these are two things to basically you need to use our service.
 
 In refrence of making calls back to our own server
 We send remote request only when user click on sync button, not when page or plugin load. When user want to sync product from our platform to there platform, then user click on sync button to get access of our products.
@@ -42,7 +41,7 @@ Visit our website, Provide your Valid Detail that help us to recognize you as ge
 
 == Frequently asked questions ==
 
-1. How to connect your store with BiglyDropship
+How to connect your store with BiglyDropship?
 - Login to your credential to BiglyDropship Seller Panel & afterwards on the right hand side, there is an API option, click on it.
 -  Go to Submenu options then click on “Connect your Store”
 - There you can download the plugin or you get plugin from WordPress and then create API Key for your store
@@ -60,11 +59,11 @@ Visit our website, Provide your Valid Detail that help us to recognize you as ge
 - Click on “Sync” here to Import Product on your Online Store. It will take some time after     proceeding.  
 - Finally, Products are at your Online Store.
 
-2. Need to be registered on BiglyDropship to use this plugin features?
+Need to be registered on BiglyDropship to use this plugin features?
 - Yes, you need to be register on BiglyDropship to create API keys.
 
-3. How I can contact you?
-- You can contact us through email - dropship@biglytech.net or  info@biglytech.net 
+How I can contact you?
+- You can contact us through email - dropship@biglytech.net or info@biglytech.net 
 
 == Screenshots ==
 
