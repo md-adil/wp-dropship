@@ -20,9 +20,6 @@ We send remote request only when user click on sync button, not when page or plu
 In refrence of offloading of images or code
 All images will be served from our server or any other client servers according to our application need. We have amazon s3 static hosting (http://s.bigly.io/) for images and most of images will served from here. 
 
-Our Website
-Biglytech
-
 == Installation ==
 
 * Open your WordPress Panel
