@@ -39,7 +39,7 @@ require(__DIR__ . '/../includes/header.php');
 				<tr>
 					<td>Password</td>
 					<td>
-						<input type="text" name="password" type="password" placeholder="Password">
+						<input type="password" name="password" type="password" placeholder="Password">
 					</td>
 				</tr>
 				<tr>
