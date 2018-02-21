@@ -33,7 +33,7 @@ require(__DIR__ . '/../includes/header.php');
 				<tr>
 					<td>Email</td>
 					<td>
-						<input type="text" name="username" placeholder="Email / Username" required>
+						<input type="email" name="email" placeholder="Email / Username" required>
 					</td>
 				</tr>
 				<tr>
