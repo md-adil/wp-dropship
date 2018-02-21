@@ -40,6 +40,7 @@ class CredentialController extends Controller
                 if (!preg_match("/^[a-zA-Z @ ]*$/",$username)) {
                   $nameErr = "Only letters and white space allowed"; 
                 }
+            }
 
             if (empty($_POST["id"])) {
                 $idErr = "Client Id is required";
@@ -49,6 +50,7 @@ class CredentialController extends Controller
                 if (!preg_match('/^[0-9]*$/', $id)) {
                   $idErr = "Only user number"; 
                 }
+            }
 
             if (empty($_POST["client_secret"])) {
                 $secretErr = "Client Secret is required";
@@ -58,12 +60,13 @@ class CredentialController extends Controller
                 if (!preg_match("/(A-Za-z0-9]+/", $client_secret)) {
                   $secretErr = "Only use numbers and letters"; 
                 }
+            }
                 function test_input($data) {
                   $data = trim($data);
                   $data = stripslashes($data);
                   return $data;
-        }
-        $res = $this->request->post($tokenUrl, [
+                }
+            $res = $this->request->post($tokenUrl, [
             'body' => [
                 'grant_type' => filter_var('password', FILTER_SANITIZE_STRING),
                 'client_id' => filter_var($data['client_id'], FILTER_SANITIZE_STRING),
