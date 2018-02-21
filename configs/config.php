@@ -15,7 +15,7 @@ return [
     ],
 
     'remote' => [
-        'base' => 'http://dropship.biglytech.net',
+        'base' => 'http://dropship.bigly.io',
         'sync' => 'api/sync',
         'access_token' => 'oauth/token'
     ],

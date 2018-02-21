@@ -26,11 +26,11 @@ class CredentialController extends Controller
         $optionkey = $this->config->get('options.access_token');
         $res = $this->request->post($tokenUrl, [
             'body' => [
-                'grant_type' => 'password',
-                'client_id' => $_POST['client_id'],
-                'client_secret' => $_POST['client_secret'],
-                'username' => $_POST['username'],
-                'password' => $_POST['password']
+                'grant_type' => filter_var('password', FILTER_SANITIZE_STRING),
+                'client_id' => filter_var($_POST['client_id'], FILTER_SANITIZE_STRING),
+                'client_secret' => filter_var($_POST['client_secret'], FILTER_SANITIZE_STRING),
+                'username' => filter_var($_POST['username'], FILTER_SANITIZE_STRING),
+                'password' => filter_var($_POST['password'], FILTER_SANITIZE_STRING)
             ]
         ]);
         
