@@ -21,25 +21,25 @@ require(__DIR__ . '/../includes/header.php');
 				<tr>
 					<td>Client ID</td>
 					<td>
-						<input type="text" name="client_id" placeholder="Client ID">
+						<input type="text" name="client_id" placeholder="Client ID" required>
 					</td>
 				</tr>
 				<tr>
 					<td>Secret Key</td>
 					<td>
-						<input type="text" name="client_secret" placeholder="Secret key">
+						<input type="text" name="client_secret" placeholder="Secret key" required >
 					</td>
 				</tr>
 				<tr>
 					<td>Email</td>
 					<td>
-						<input type="text" name="username" placeholder="Email / Username">
+						<input type="text" name="username" placeholder="Email / Username" required>
 					</td>
 				</tr>
 				<tr>
 					<td>Password</td>
 					<td>
-						<input type="password" name="password" type="password" placeholder="Password">
+						<input type="password" name="password" type="password" placeholder="Password" required>
 					</td>
 				</tr>
 				<tr>
