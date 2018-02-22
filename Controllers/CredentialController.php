@@ -24,10 +24,11 @@ class CredentialController extends Controller
     {
         $tokenUrl = $this->config->get('remote.access_token');
         $optionkey = $this->config->get('options.access_token');
-        $client_id = $_POST["client_id"];
-        $client_secret = $_POST["client_secret"];
-        $username = $_POST["username"];
-        $password = $_POST["password"];
+        $grant_type = filter_var('password', FILTER_SANITIZE_STRING);
+        $client_id = filter_var($_POST['client_id'], FILTER_SANITIZE_STRING);
+        $client_secret = filter_var($_POST['client_secret'], FILTER_SANITIZE_STRING);
+        $username = stripslashes($_POST['username']);
+        $password = filter_var($_POST['password'], FILTER_SANITIZE_STRING);
             if($client_id) {                
                 if (!preg_match('/^[0-9]*$/', $client_id)) {
                     return [
@@ -39,23 +40,19 @@ class CredentialController extends Controller
 
             if($client_secret) {
                 if (!preg_match('/^[a-zA-Z0-9]/',$client_secret)) {
-                    //dd($client_secret);
                   return [
                     'status' => 'fail',
-                    'message' => 'client secret only contain numbers without any space'
+                    'message' => 'client secret only contain numbers and letter'
                     ]; 
                 }
-            }
-
-
-            
+            }          
         $res = $this->request->post($tokenUrl, [
             'body' => [
-                'grant_type' => filter_var('password', FILTER_SANITIZE_STRING),
-                'client_id' => filter_var($client_id, FILTER_SANITIZE_STRING),
+                'grant_type' => $grant_type,
+                'client_id' => $client_id,
                 'client_secret' => $client_secret,
-                'email' => stripslashes($_POST['email']),
-                'password' => filter_var($_POST['password'], FILTER_SANITIZE_STRING)
+                'username' => $username,
+                'password' => $password
             ]
         ]);
         
