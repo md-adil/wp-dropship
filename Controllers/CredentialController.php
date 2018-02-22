@@ -27,7 +27,6 @@ class CredentialController extends Controller
         $optionkey = $this->config->get('options.access_token');
         // credientials validation
         $nameErr = $emailErr = $genderErr = $websiteErr = "";
-        $grant_type = filter_var('password', FILTER_SANITIZE_STRING);
         $client_id = $_POST['client_id'];
         $client_secret = $_POST['client_secret'];
         $username = stripslashes($_POST['username']);
@@ -36,7 +35,7 @@ class CredentialController extends Controller
                 if (!preg_match('/^[0-9]*$/', $client_id)) {
                     return [
                     'status' => 'fail',
-                    'message' => 'client Id Only contain numbers without any space'
+                    'message' => 'Client id only contain numbers without any space'
                     ];
                 }
             }
@@ -45,13 +44,13 @@ class CredentialController extends Controller
                 if (!preg_match('/^[0-9a-zA-Z]+$/',$client_secret)) {
                   return [
                     'status' => 'fail',
-                    'message' => 'client secret only contain numbers and letter'
+                    'message' => 'Client secret not match'
                     ]; 
                 }
             }          
         $res = $this->request->post($tokenUrl, [
             'body' => [
-                'grant_type' => $grant_type,
+                'grant_type' => 'password',
                 'client_id' => $client_id,
                 'client_secret' => $client_secret,
                 'username' => $username,
