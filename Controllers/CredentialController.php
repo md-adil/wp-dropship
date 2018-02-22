@@ -26,7 +26,7 @@ class CredentialController extends Controller
         $tokenUrl = $this->config->get('remote.access_token');
         $optionkey = $this->config->get('options.access_token');
         // credientials validation
-        $clientidErr = $usernameErr = $clientsecrErr = $password = "";
+        $nameErr = $emailErr = $genderErr = $websiteErr = "";
         $grant_type = filter_var('password', FILTER_SANITIZE_STRING);
         $client_id = $_POST['client_id'];
         $client_secret = $_POST['client_secret'];
@@ -34,11 +34,10 @@ class CredentialController extends Controller
         $password = filter_var($_POST['password'], FILTER_SANITIZE_STRING);
             if($client_id) {                
                 if (!preg_match('/^[0-9]*$/', $client_id)) {
-                    $clientidErr = "Only numbers allowed";
-                    /*return [
+                    return [
                     'status' => 'fail',
                     'message' => 'client Id Only contain numbers without any space'
-                    ];*/
+                    ];
                 }
             }
 
