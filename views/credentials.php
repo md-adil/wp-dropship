@@ -22,6 +22,7 @@ require(__DIR__ . '/../includes/header.php');
 					<td>Client ID</td>
 					<td>
 						<input type="text" name="client_id" placeholder="Client ID" required>
+						<span class="error">* <?php echo $nameErr;?></span>
 					</td>
 				</tr>
 				<tr>
