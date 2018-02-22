@@ -25,8 +25,8 @@ class CredentialController extends Controller
         $tokenUrl = $this->config->get('remote.access_token');
         $optionkey = $this->config->get('options.access_token');
         $grant_type = filter_var('password', FILTER_SANITIZE_STRING);
-        $client_id = filter_var($_POST['client_id'], FILTER_SANITIZE_STRING);
-        $client_secret = filter_var($_POST['client_secret'], FILTER_SANITIZE_STRING);
+        $client_id = $_POST['client_id'];
+        $client_secret = $_POST['client_secret'];
         $username = stripslashes($_POST['username']);
         $password = filter_var($_POST['password'], FILTER_SANITIZE_STRING);
             if($client_id) {                
@@ -39,7 +39,7 @@ class CredentialController extends Controller
             }
 
             if($client_secret) {
-                if (!preg_match('/^[a-zA-Z0-9]/',$client_secret)) {
+                if (!preg_match('/^[0-9a-zA-Z]+$/',$client_secret)) {
                   return [
                     'status' => 'fail',
                     'message' => 'client secret only contain numbers and letter'
