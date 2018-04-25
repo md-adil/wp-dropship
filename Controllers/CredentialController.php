@@ -105,7 +105,7 @@ class CredentialController extends Controller
         update_option($this->config->get('options.webhook_token'), $token);
         $res = $this->request->post($tokenUrl, [
             'body' => [
-                'url' => $url,
+                'url' => site_url(),
                 'token' => $token,
             ]
         ]);
