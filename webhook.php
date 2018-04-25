@@ -20,6 +20,13 @@ class SyncController
 
     public function sync()
     {
+        if(!$this->validateRequest($this->data->token)) {
+            http_response_code(500);
+            return [
+                'status' => 'fail',
+                'message' => 'invalid token'
+            ];
+        }
         set_time_limit(60 * 5);
         try {
            switch ($this->data->type) {
@@ -27,7 +34,6 @@ class SyncController
            		$this->product($this->data->data, $this->data->action);
            		break;
            	default:
-           		# code...
            		break;
            }
         } catch (Exception $e) {
@@ -42,18 +48,21 @@ class SyncController
         ];
     }
 
+    protected function validateRequest($token) {
+        $tokenKey = $this->configs['options']['webhook_token'];
+        return $token === get_option($tokenKey);
+    }
+
     protected function createCategory($category)
     {
         $parentId = 0;
         if (isset($category->parent_id) && $category->parent_id) {
             $parentId = $this->getTermId($category->parent_id);
         }
-
         $term = wp_insert_term($category->name, 'product_cat', [
             'description' => $category->description,
             'parent' => $parentId ?: 0
         ]);
-
         if(!$term instanceof WP_Error) {
             $this->insertCategoryMapping($category, $term);
         }
@@ -70,13 +79,11 @@ class SyncController
         if ($category->parent_id) {
             $parentId = $this->getTermId($category->parent_id);
         }
-
         $data = [
             'name' => $category->name,
             'description' => $category->description,
             'parent' => $parentId
         ];
-
         wp_update_term($termId, 'product_cat', $data);
     }
 
@@ -309,7 +316,6 @@ class SyncController
         if (!isset($product->attributes) || !$product->attributes) {
             return;
         }
-        
         foreach ($product->attributes as $attribute) {
             wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name);
             $term_taxonomy_ids = wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name, true );
@@ -349,7 +355,6 @@ try {
     $json = ( new SyncController($data) )->sync();
     header("Content-Type: application/json");
     echo json_encode($json);
-} catch (Exception $e) {
-}
+} catch (Exception $e) {}
 exit();
 

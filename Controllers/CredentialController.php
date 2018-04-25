@@ -22,7 +22,6 @@ class CredentialController extends Controller
 
     public function getAccessToken()
     {
-
         $tokenUrl = $this->config->get('remote.access_token');
         $optionkey = $this->config->get('options.access_token');
         // credientials validation
@@ -41,7 +40,7 @@ class CredentialController extends Controller
             }
 
             if($client_secret) {
-                if (!preg_match('/^[0-9a-zA-Z]+$/',$client_secret)) {
+                if (!preg_match('/^[0-9a-zA-Z]+$/', $client_secret)) {
                   return [
                     'status' => 'fail',
                     'message' => 'Client secret not match'
@@ -64,10 +63,9 @@ class CredentialController extends Controller
                 'message' => $res->get_error_messages()
             ];
         }
+
         $res = json_decode($res['body']);
       
-
-
         if ($res === null
             && json_last_error() !== JSON_ERROR_NONE) {
             return [
@@ -86,6 +84,7 @@ class CredentialController extends Controller
             $token = $res->access_token;
             if ($token) {
                 update_option($optionkey, $token);
+                $this->registerWebhook();
                 return [
                     'status' => 'ok',
                     'message' => 'Status has been updated.'
@@ -97,5 +96,18 @@ class CredentialController extends Controller
                 ];
             }
         }
+    }
+
+    public function registerWebhook()
+    {
+        $tokenUrl = $this->config->get('remote.webhook');
+        $token = wp_generate_password(20);
+        update_option($this->config->get('options.webhook_token'), $token);
+        $res = $this->request->post($tokenUrl, [
+            'body' => [
+                'url' => $url,
+                'token' => $token,
+            ]
+        ]);
     }
 }
