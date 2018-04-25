@@ -101,11 +101,11 @@ class CredentialController extends Controller
     public function registerWebhook()
     {
         $tokenUrl = $this->config->get('remote.webhook');
-        $token = wp_generate_password(20);
+        $token = wp_generate_password(40);
         update_option($this->config->get('options.webhook_token'), $token);
         $res = $this->request->post($tokenUrl, [
             'body' => [
-                'url' => site_url(),
+                'url' => site_url() . '/wp-content/plugins/bigly-dropship/webhook.php',
                 'token' => $token,
             ]
         ]);
