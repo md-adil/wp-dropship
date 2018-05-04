@@ -21,7 +21,7 @@ class SyncController
     public function sync()
     {
         if(!$this->validateRequest($this->data->token)) {
-            http_response_code(500);
+            http_response_code(401);
             return [
                 'status' => 'fail',
                 'message' => 'invalid token'
@@ -53,60 +53,37 @@ class SyncController
         return $token === get_option($tokenKey);
     }
 
-    protected function createCategory($category)
+    public function getTermByName($term, $taxonomy)
     {
-        $parentId = 0;
-        if (isset($category->parent_id) && $category->parent_id) {
-            $parentId = $this->getTermId($category->parent_id);
-        }
-        $term = wp_insert_term($category->name, 'product_cat', [
-            'description' => $category->description,
-            'parent' => $parentId ?: 0
-        ]);
-        if(!$term instanceof WP_Error) {
-            $this->insertCategoryMapping($category, $term);
-        }
-        return $term;
+        $prefix = $this->db->prefix;
+        return $this->db->get_var("SELECT term_id FROM {$prefix}terms as terms JOIN
+                {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
+            WHERE terms.name=? AND taxonomy.taxonomy=?", [ $term, $taxonomy ]);
     }
 
-    protected function updateCategory($category)
+    protected function createCategories($categories)
     {
-        $termId = $this->getTermId($category->id);
-        if (!$termId) {
-            $this->createCategory($category);
+        $ids = []; $mappings = []; $parentId = 0;
+        foreach($categories as $category) {
+            if (isset($category->parent_id) && $category->parent_id && isset($mappings[$category->parent_id])) {
+                $parentId = $mappings[$category->parent_id];
+            }
+            $term = $this->getTermByName($category->name, 'product_cat');
+            if($term) {
+                $ids[] = $term;
+            } else {
+                $term = wp_insert_term($category->name, 'product_cat', [
+                    'description' => $category->description,
+                    'parent' => $parentId ?: 0
+                ]);
+                if($term instanceof WP_Error) {
+                    continue;
+                }
+                $ids[] = $term['term_id'];
+            }
+            $mappings[$category->id] = $term['term_id'];
         }
-        $parentId = null;
-        if ($category->parent_id) {
-            $parentId = $this->getTermId($category->parent_id);
-        }
-        $data = [
-            'name' => $category->name,
-            'description' => $category->description,
-            'parent' => $parentId
-        ];
-        wp_update_term($termId, 'product_cat', $data);
-    }
-
-    protected function deleteCategory($category)
-    {
-        $termId = $this->getTermId($category->id);
-        wp_delete_term($termId, 'product_cat', [
-            'force_default' => true
-        ]);
-        $this->deleteMapping($category->id, 'category');
-    }
-
-    protected function getTermId($id)
-    {
-        return $this->getVar('host_id', [ 'guest_id' => $id, 'type' => 'category' ]);
-    }
-
-    private function insertCategoryMapping($category, $term)
-    {
-        if (!isset($term['term_id'])) {
-            return;
-        }
-        $this->insertMapping($category->id, $term['term_id'], 'category');
+        return $ids;
     }
 
     public function product($product, $action)
@@ -128,12 +105,9 @@ class SyncController
 
     protected function preparePost($product)
     {
-        $categories = [];
-        
-        if (isset($product->categories)) {
-            $categories = array_map(function ($cat) {
-                return $this->getTermId($cat->id);
-            }, $product->categories);
+        $categories = null;
+        if($this->ifset($product->categories)) {
+            $categories = $this->createCategories($product->categories);
         }
 
         return [
@@ -289,7 +263,6 @@ class SyncController
             ], false, $postId, true);
            
             if ($attachment instanceof WP_Error) {
-                $err = $attachment->get_error_messages();
                 continue;
             }
 
