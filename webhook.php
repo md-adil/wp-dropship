@@ -56,9 +56,9 @@ class SyncController
     public function getTermByName($term, $taxonomy)
     {
         $prefix = $this->db->prefix;
-        return $this->db->get_var("SELECT term_id FROM {$prefix}terms as terms JOIN
+        return $this->db->get_var($this->db->prepare("SELECT term_id FROM {$prefix}terms as terms JOIN
                 {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
-            WHERE terms.name=? AND taxonomy.taxonomy=?", [ $term, $taxonomy ]);
+            WHERE terms.name=%s AND taxonomy.taxonomy=%s", $term, $taxonomy));
     }
 
     protected function createCategories($categories)
@@ -247,6 +247,10 @@ class SyncController
         ]);
     }
 
+    private function getAttachmentId($guid, $postId) {
+        return $this->db->get_var($this->db->prepare("SELECT ID FROM {$this->db->posts} WHERE guid=%s AND post_parent=%d", $guid, $postId));
+    }
+
     private function insertAttachments($product, $postId)
     {
         if (!isset($product->media) || !$product->media) {
@@ -255,15 +259,16 @@ class SyncController
         $defaultImage = null;
         $attachments = [];
         foreach ($product->media as $media) {
-            $attachment = wp_insert_attachment([
-                'guid' => $media->large,
-                'post_mime_type' => $media->mime ?: 'image/jpeg',
-                'post_excerpt' => $media->caption ?: '',
-                'post_content' => 'biglydropship'
-            ], false, $postId, true);
-           
-            if ($attachment instanceof WP_Error) {
-                continue;
+            if(!$attachment = $this->getAttachmentId($media->large, $postId)) {
+                $attachment = wp_insert_attachment([
+                    'guid' => $media->large,
+                    'post_mime_type' => $media->mime ?: 'image/jpeg',
+                    'post_excerpt' => $media->caption ?: '',
+                    'post_content' => 'biglydropship'
+                ], false, $postId, true);
+                if ($attachment instanceof WP_Error) {
+                    continue;
+                }
             }
 
             if ($media->default) {
