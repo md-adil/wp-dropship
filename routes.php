@@ -27,6 +27,7 @@ add_action('admin_menu', function () {
 // Ajax routes
 add_action('wp_ajax_blds_access-token', Controller::resolve('CredentialController@getAccessToken'));
 add_action('wp_ajax_blds_sync', Controller::resolve('SyncController@sync'));
+add_action('wp_ajax_blds_register-webhook', Controller::resolve('CredentialController@registerWebhook'));
 
 
 // Hooks

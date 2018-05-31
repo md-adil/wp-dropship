@@ -1,6 +1,9 @@
 <?php
 namespace Bigly\Dropship;
+use Exception;
+use WP_Error;
 require('../../../wp-config.php');
+
 /**
 *
 */
@@ -20,6 +23,7 @@ class SyncController
 
     public function sync()
     {
+        // echo $name[0];
         if(!$this->validateRequest($this->data->token)) {
             http_response_code(401);
             return [
@@ -28,21 +32,13 @@ class SyncController
             ];
         }
         set_time_limit(60 * 5);
-        try {
-           switch ($this->data->type) {
-           	case 'product':
-           		$this->product($this->data->data, $this->data->action);
-           		break;
-           	default:
-           		break;
-           }
-        } catch (Exception $e) {
-            http_response_code(500);
-            return [
-                'status' => 'fail',
-                'message' => $e->getMessage()
-            ];
-        }
+       switch ($this->data->type) {
+       	case 'product':
+       		$this->product($this->data->data, $this->data->action);
+       		break;
+       	default:
+       		break;
+       }
         return [
             'status' => 'ok'
         ];
@@ -56,7 +52,7 @@ class SyncController
     public function getTermByName($term, $taxonomy)
     {
         $prefix = $this->db->prefix;
-        return $this->db->get_var($this->db->prepare("SELECT term_id FROM {$prefix}terms as terms JOIN
+        return $this->db->get_var($this->db->prepare("SELECT terms.term_id FROM {$prefix}terms as terms JOIN
                 {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
             WHERE terms.name=%s AND taxonomy.taxonomy=%s", $term, $taxonomy));
     }
@@ -70,18 +66,20 @@ class SyncController
             }
             $term = $this->getTermByName($category->name, 'product_cat');
             if($term) {
-                $ids[] = $term;
+                $ids[] = (int)$term;
             } else {
                 $term = wp_insert_term($category->name, 'product_cat', [
                     'description' => $category->description,
-                    'parent' => $parentId ?: 0
+                    'parent' => $parentId
                 ]);
                 if($term instanceof WP_Error) {
+                    // throw new Exception((string)$term->get_error_message(), 422);
                     continue;
                 }
-                $ids[] = $term['term_id'];
+                $term = $term['term_id'];
+                $ids[] = (int)$term;
             }
-            $mappings[$category->id] = $term['term_id'];
+            $mappings[$category->id] = $term;
         }
         return $ids;
     }
@@ -106,33 +104,54 @@ class SyncController
     protected function preparePost($product)
     {
         $categories = null;
-        if($this->ifset($product->categories)) {
-            $categories = $this->createCategories($product->categories);
-        }
-
+        
         return [
             'post_content' => $this->ifset($product->description),
             'post_title' => $this->ifset($product->name),
             'post_excerpt' => $this->ifset($product->excerpt),
             'post_status' => 'publish',
             'post_type' => 'product',
-            'tax_input' => [
-                'product_cat' => $categories
-            ]
         ];
+    }
+
+    protected function isPostExists($product)
+    {
+        $postId = $this->getPostId($product->id);
+        if(!$postId) {
+            return false;
+        }
+        $post = get_post($postId);
+        if($post) {
+            return $postId;
+        }
+        $this->deleteMapping($product->id, 'product');
+        return false;
     }
 
     protected function createProduct($product)
     {
         // check if product exists then recreate.
-
         $data = $this->preparePost($product);
+        if($oldId = $this->isPostExists($product)) {
+            $data['ID'] = $oldId;
+        }
+
         $data = array_filter($data);
+        // die(print_r($data,1));
         $post = wp_insert_post($data, true);
+        if($post instanceof WP_Error) {
+            throw new Exception($post->get_error_message(), 12);
+        }
+
+        if($this->ifset($product->categories)) {
+            wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
+        }
+
         $this->insertProductMapping($product, $post);
         $this->insertAttributes($product, $post);
         $this->insertPostMeta($post, $product);
         $this->insertAttachments($product, $post);
+        // Need to work on
         $this->insertAttributes($product, $post);
         //update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
     }
@@ -186,6 +205,10 @@ class SyncController
         $data['ID'] = $postId;
         $data = array_filter($data);
         $post = wp_insert_post($data, true);
+
+        if($this->ifset($product->categories)) {
+            wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
+        }
         // Checking if product has already medias then remove it first then insert again.
         return $this->updatePostMeta($postId, $product);
     }
@@ -329,10 +352,17 @@ class SyncController
 }
 
 $data = json_decode(file_get_contents('php://input'));
+header("Content-Type: application/json");
 try {
     $json = ( new SyncController($data) )->sync();
-    header("Content-Type: application/json");
     echo json_encode($json);
-} catch (Exception $e) {}
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'fail',
+        'message' => $e->getMessage(),
+        'payload' => $e
+    ]);
+}
 exit();
 

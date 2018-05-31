@@ -3,6 +3,7 @@ namespace Bigly\Dropship\Controllers;
 
 use Bigly\Dropship\Config;
 use Bigly\Dropship\Library\Client;
+use WP_Error;
 
 class CredentialController extends Controller
 {
@@ -46,7 +47,8 @@ class CredentialController extends Controller
                     'message' => 'Client secret not match'
                     ]; 
                 }
-            }          
+            }
+
         $res = $this->request->post($tokenUrl, [
             'body' => [
                 'grant_type' => 'password',
@@ -71,7 +73,8 @@ class CredentialController extends Controller
             return [
                 'status' => 'fail',
                 'message' => 'Something went wrong while accessing credentials.',
-                'error' => 'Invalid json response'
+                'error' => 'Invalid json response',
+                'response' => $res['body']
             ];
         }
         if (isset($res->error)) {
@@ -84,7 +87,6 @@ class CredentialController extends Controller
             $token = $res->access_token;
             if ($token) {
                 update_option($optionkey, $token);
-                $this->registerWebhook();
                 return [
                     'status' => 'ok',
                     'message' => 'Status has been updated.'
@@ -100,14 +102,26 @@ class CredentialController extends Controller
 
     public function registerWebhook()
     {
+        $baseName = basename(dirname(dirname(__FILE__)));
         $tokenUrl = $this->config->get('remote.webhook');
         $token = wp_generate_password(60);
         update_option($this->config->get('options.webhook_token'), $token);
-        $res = $this->request->post($tokenUrl, [
+        $res = $this->request->withAuth()->post($tokenUrl, [
             'body' => [
-                'url' => site_url() . '/wp-content/plugins/bigly-dropship/webhook.php',
+                'url' => site_url() . "/wp-content/plugins/{$baseName}/webhook.php",
                 'token' => $token,
             ]
         ]);
+        
+        if($res instanceOf WP_Error) {
+            return [
+                'status' => 'fail',
+                'message' => $res->get_error_messages()
+            ];
+        }
+
+        return [
+            'status' => 'ok',
+        ] + $res;
     }
 }

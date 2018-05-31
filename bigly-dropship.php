@@ -31,35 +31,33 @@ spl_autoload_register(function ($class) {
     }
 });
 
-$sizes = [
-    'thumbnail' => [ 150, 150 ],   // Thumbnail (150 x 150 hard cropped)
-    'medium' => [ 300, 300 ],    // Medium resolution (300 x 300 max height 300px)
-    'large' => [ 1024, 1024 ],   // Large resolution (1024 x 1024 max height 1024px)
-     
-];
 
-$count = 0;
-add_filter('image_downsize', function($f, $id, $size) use( $sizes ) {
-    global $count;
-    $width = 1024; $height = 1024;
-    $is_intermediate = false;
+add_filter('image_downsize', function($f, $id, $size) {
+    $sizes = [
+        'thumbnail' => [ 'thumb', 150, 150 ],   // Thumbnail (150 x 150 hard cropped)
+        'medium' => [ 'medium', 300, 300 ],    // Medium resolution (300 x 300 max height 300px)
+        'large' => [ 'large', 1024, 1024 ],   // Large resolution (1024 x 1024 max height 1024px)
+    ];
     if(!$id) return;
-    $count ++;
-    // echo 'count-id:' . $id . '-' . $count;
     $post = get_post($id);
     if(!$post) return;
     if(!$post->post_content === 'biglydropship') return;
+    if(is_array($size)) {
+        array_unshift($size, 'large');
+    } else if(isset($sizes[$size])) {
+        $size = $sizes[$size];
+    } else {
+        $size = $sizes['large'];
+    }
+
     return [
-        $post->guid,
-        $width,
-        $height,
+        str_replace("/large/", "/{$size[0]}/", $post->guid),
+        $size[1],
+        $size[2],
         $is_intermediate
     ];
-
 }, 10, 3);
-
 // Initialize
-
 function run_biglydropship()
 {
     require(__DIR__ . '/routes.php');
