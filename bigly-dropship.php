@@ -38,6 +38,7 @@ add_filter('image_downsize', function($f, $id, $size) {
         'medium' => [ 'medium', 300, 300 ],    // Medium resolution (300 x 300 max height 300px)
         'large' => [ 'large', 1024, 1024 ],   // Large resolution (1024 x 1024 max height 1024px)
     ];
+    $is_intermediate = false;
     if(!$id) return;
     $post = get_post($id);
     if(!$post) return;
