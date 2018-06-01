@@ -54,7 +54,7 @@ class SyncController
         $prefix = $this->db->prefix;
         return $this->db->get_var($this->db->prepare("SELECT terms.term_id FROM {$prefix}terms as terms JOIN
                 {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
-            WHERE terms.name=%s AND taxonomy.taxonomy=%s", $term, $taxonomy));
+            WHERE terms.name='%s' AND taxonomy.taxonomy='%s'", $term, $taxonomy));
     }
 
     protected function createCategories($categories)
@@ -271,7 +271,7 @@ class SyncController
     }
 
     private function getAttachmentId($guid, $postId) {
-        return $this->db->get_var($this->db->prepare("SELECT ID FROM {$this->db->posts} WHERE guid=%s AND post_parent=%d", $guid, $postId));
+        return $this->db->get_var($this->db->prepare("SELECT ID FROM {$this->db->posts} WHERE guid='%s' AND post_parent=%d", $guid, $postId));
     }
 
     private function insertAttachments($product, $postId)
