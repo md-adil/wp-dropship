@@ -35,16 +35,28 @@ spl_autoload_register(function ($class) {
 add_filter('image_downsize', function($f, $id, $size) {
     $sizes = [
         'thumbnail' => [ 'thumb', 150, 150 ],   // Thumbnail (150 x 150 hard cropped)
+        'small' => [ 'small', 472, 472 ],   // Thumbnail (150 x 150 hard cropped)
         'medium' => [ 'medium', 300, 300 ],    // Medium resolution (300 x 300 max height 300px)
         'large' => [ 'large', 1024, 1024 ],   // Large resolution (1024 x 1024 max height 1024px)
     ];
+
     $is_intermediate = false;
+    
     if(!$id) return;
     $post = get_post($id);
     if(!$post) return;
     if(!$post->post_content === 'biglydropship') return;
     if(is_array($size)) {
-        array_unshift($size, 'large');
+        $_width = $size[0];
+        if($_width <= 280) {
+            array_unshift($size, 'thumb');
+        } else if($_width <= 472) {
+            array_unshift($size, 'small');
+        } else if($_width <= 800) {
+            array_unshift($size, 'medium');
+        } else {
+            array_unshift($size, 'large');
+        }
     } else if(isset($sizes[$size])) {
         $size = $sizes[$size];
     } else {
