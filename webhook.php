@@ -137,17 +137,16 @@ class SyncController
         }
 
         $data = array_filter($data);
-        // die(print_r($data,1));
         $post = wp_insert_post($data, true);
         if($post instanceof WP_Error) {
-            throw new Exception($post->get_error_message(), 12);
+            throw new Exception($post->get_error_message());
         }
+        $this->insertProductMapping($product, $post);
 
         if($this->ifset($product->categories)) {
             wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
         }
 
-        $this->insertProductMapping($product, $post);
         $this->insertAttributes($product, $post);
         $this->insertPostMeta($post, $product);
         $this->insertAttachments($product, $post);
@@ -177,9 +176,6 @@ class SyncController
 
     protected function insertPostMeta($postId, $product)
     {
-        if ($postId instanceof WP_Error) {
-            return;
-        }
         $meta = $this->preparePostMeta($product);
         $meta['_manage_stock'] = 'yes';
         foreach ($meta as $key => $val) {
@@ -231,9 +227,6 @@ class SyncController
 
     private function insertProductMapping($product, $post)
     {
-        if ($post instanceof WP_Error) {
-            return;
-        }
        $this->insertMapping($product->id, $post, 'product');
     }
 
@@ -245,7 +238,7 @@ class SyncController
         ]);
 
         if($exists) {
-            $this->db->update($tableName, [
+            return $this->db->update($tableName, [
                 'host_id' => $hostId,
             ], [
                 'guest_id' => $guestId,
@@ -253,7 +246,7 @@ class SyncController
             ]);
 
         } else {
-            $this->db->insert($tableName, [
+            return $this->db->insert($tableName, [
                 'guest_id' => $guestId,
                 'host_id' => $hostId,
                 'type' => $type
@@ -361,7 +354,7 @@ try {
     echo json_encode([
         'status' => 'fail',
         'message' => $e->getMessage(),
-        'payload' => $e
+        'payload' => $e->getTrace()
     ]);
 }
 exit();
