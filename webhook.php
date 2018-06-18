@@ -12,6 +12,18 @@ class SyncController
 	protected $configs;
 	protected $syncTable;
 	protected $db;
+
+    protected $attributeMeta = [
+        'sku' => '_sku',
+        'price' => ['_price', '_regular_price'],
+        'quantity' => '_stock',
+        'description' => '_variation_description',
+        'weight' => '_weight',
+        'length' => '_length',
+        'width' => '_width',
+        'height' => '_height'
+    ];
+
     public function __construct($data)
     {
     	global $wpdb;
@@ -19,6 +31,12 @@ class SyncController
     	$this->configs = require('configs/config.php');
     	$this->syncTable = $this->configs['tables']['sync'];
     	$this->db = $wpdb;
+    }
+    
+    public function dd($attrs)
+    {
+        print_r($attrs);
+        die();
     }
 
     public function sync()
@@ -32,16 +50,16 @@ class SyncController
             ];
         }
         set_time_limit(60 * 5);
-       switch ($this->data->type) {
-       	case 'product':
-       		$this->product($this->data->data, $this->data->action);
-       		break;
-       	default:
-       		break;
-       }
-        return [
-            'status' => 'ok'
-        ];
+        switch ($this->data->type) {
+           	case 'product':
+           		$this->product($this->data->data, $this->data->action);
+           		break;
+           	default:
+           		break;
+            }
+            return [
+                'status' => 'ok'
+            ];
     }
 
     protected function validateRequest($token) {
@@ -135,24 +153,19 @@ class SyncController
         if($oldId = $this->isPostExists($product)) {
             $data['ID'] = $oldId;
         }
-
         $data = array_filter($data);
         $post = wp_insert_post($data, true);
         if($post instanceof WP_Error) {
             throw new Exception($post->get_error_message());
         }
         $this->insertProductMapping($product, $post);
-
         if($this->ifset($product->categories)) {
             wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
         }
 
-        $this->insertAttributes($product, $post);
         $this->insertPostMeta($post, $product);
         $this->insertAttachments($product, $post);
-        // Need to work on
-        $this->insertAttributes($product, $post);
-        //update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
+        $this->insertAttributes($post, $product);
     }
 
     protected function preparePostMeta($product)
@@ -200,12 +213,14 @@ class SyncController
         $data = $this->preparePost($product);
         $data['ID'] = $postId;
         $data = array_filter($data);
-        $post = wp_insert_post($data, true);
+        $post = wp_update_post($data, true);
 
         if($this->ifset($product->categories)) {
-            wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
+            wp_set_object_terms($postId, $this->createCategories($product->categories), 'product_cat');
         }
         // Checking if product has already medias then remove it first then insert again.
+        $this->insertAttachments($product, $postId);
+        $this->insertAttributes($postId, $product);
         return $this->updatePostMeta($postId, $product);
     }
 
@@ -218,6 +233,7 @@ class SyncController
         global $wpdb;
         wp_delete_post($postId, true);
         $this->deleteMapping($product->id, 'product');
+        $this->db->query("DELETE FROM {$this->db->postmeta} WHERE post_id={$postId}");
     }
 
     public function getPostId($id)
@@ -263,7 +279,8 @@ class SyncController
         ]);
     }
 
-    private function getAttachmentId($guid, $postId) {
+    private function getAttachmentId($guid, $postId)
+    {
         return $this->db->get_var($this->db->prepare("SELECT ID FROM {$this->db->posts} WHERE guid=%s AND post_parent=%d", $guid, $postId));
     }
 
@@ -286,7 +303,6 @@ class SyncController
                     continue;
                 }
             }
-
             if ($media->default) {
                 $defaultImage = $attachment;
             } else {
@@ -304,27 +320,182 @@ class SyncController
         }
     }
 
-    protected function insertAttributes($product, $postId)
+    protected function insertAttributes($postId, $product)
     {
-        $thedata = [];
         if (!isset($product->attributes) || !$product->attributes) {
             return;
         }
-        foreach ($product->attributes as $attribute) {
-            wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name);
-            $term_taxonomy_ids = wp_set_object_terms( $postId, $attribute->pivot->value, $attribute->name, true );
-            $thedata[$attribute->name] = [
-               'name' => $attribute->name, 
-               'value'=> $attribute->pivot->value,
-               'position' => '0',
-               'is_visible' => '1',
-               'is_variation' => '1',
-               'is_taxonomy' => '0'
-            ];
+        $isVariation = false;
+        $simpleAttributes = $this->createSimpleAttributes($product->attributes, $isVariation);
+        if($isVariation) {
+            foreach($simpleAttributes as $key => $value) {
+                $simpleAttributes[$key]['is_variation'] = 1;
+            }
         }
-        update_post_meta( $postId, '_product_attributes', $thedata);
+        update_post_meta($postId, '_product_attributes', $simpleAttributes);
+        if($isVariation) {
+            wp_set_object_terms($postId, 'variable', 'product_type');
+            $variations = $this->createVariationAttributes($postId, $product->attributes);
+            // $this->dd($variations);
+            $this->insertVariationAttributes($postId, $variations);
+        } else {
+            wp_remove_object_terms($postId, 'variable', 'product_type');
+            $this->removeVariationAttributes($postId);
+        }
     }
 
+    private function createSimpleAttributes($attributes, &$isVariation, $attrs = [], $pos = 0)
+    {
+        foreach ($attributes as $attribute) {
+            $_name = strtolower($attribute->name);
+            if(isset($attrs[$_name])) {
+                $attrs[$_name]['value'] = $attrs[$_name]['value'] . '|' . $attribute->value;
+            } else {
+                $attrs[$_name] = [
+                   'name' => $attribute->name, 
+                   'value'=> $attribute->value,
+                   'position' => $pos++,
+                   'is_visible' => 1,
+                   'is_variation' => 0,
+                   'is_taxonomy' => 0
+                ];
+            }
+
+            if(isset($attribute->price) || isset($attribute->quantity) || isset($attribute->children)) {
+                $isVariation = true;
+            }
+
+            if(isset($attribute->children)) {
+                $attrs = $this->createSimpleAttributes($attribute->children, $isVariation, $attrs, $pos);
+            }
+        }
+        return $attrs;
+    }
+
+    private function createVariationAttributes($postId, $attributes, $parents = [], $variations = [])
+    {
+        foreach($attributes as $attribute) {
+            if(isset($attribute->children)) {
+                array_unshift($parents, $attribute);
+                $variations = $this->createVariationAttributes($postId, $attribute->children, $parents, $variations);
+            } else {
+                $attribute->values = [];
+                $attribute->values[] = [
+                    'name' => $attribute->name,
+                    'value' => $attribute->value
+                ];
+                if($parents) {
+                    foreach($parents as $parent) {
+                        $attribute->values[] = [
+                            'name' => $parent->name,
+                            'value' => $parent->value
+                        ];
+                        if(!isset($attribute->price) && isset($parent->price)) {
+                            $attribute->price = $parent->price;
+                        }
+                        if(!isset($attribute->quantity) && isset($parent->quantity)) {
+                            $attribute->quantity = $parent->quantity;
+                        }
+                    }
+                }
+                $variations[] = $attribute;
+            }
+        }
+
+        return $variations;
+    }
+
+    private function insertVariationAttributes($post_id, $variations)  
+    {
+        $usedVariations = [];
+        foreach ($variations as $variation) {
+            $index = $variation->id;
+            if(!isset($variation->price)) {
+                $variation->price = get_post_meta($post_id, '_stock', true);
+            }
+            if(!isset($variation->quantity)) {
+                $variation->quantity = get_post_meta($post_id, '_regular_price', true);
+            }
+
+            $variation_post_id = $this->db->get_var("SELECT ID FROM {$this->db->posts}
+                WHERE post_parent={$post_id} AND post_content='{$index}'");
+            if($variation_post_id) {
+                wp_update_post([
+                    'ID' => $variation_post_id,
+                    'post_title'  => 'Variation #' . $index .' of ' .count($variations). ' for product#'. $post_id,
+                    'post_status' => 'publish'
+                ]);
+            } else {
+                $variation_post_id = wp_insert_post([
+                    'post_title'  => 'Variation #' . $index .' of ' .count($variations). ' for product#'. $post_id,
+                    'post_name'   => 'product-' . $post_id . '-variation-' . $index,
+                    'post_status' => 'publish',
+                    'post_content' => $index,
+                    'post_parent' => $post_id,
+                    'post_type'   => 'product_variation',
+                    'guid'        => home_url() . '/?product_variation=product-' . $post_id . '-variation-' . $index
+                ]);
+            }
+            $usedVariations[] = $variation_post_id;
+            foreach ($variation->values as $attr) {   
+                $attribute = strtolower($attr['name']);
+                $value = $attr['value'];
+                update_post_meta($variation_post_id, 'attribute_' . $attribute, $value);
+            }
+
+            foreach($this->attributeMeta as $key => $meta) {
+                if(isset($variation->{$key})) {
+                    $metaVal = $variation->{$key};
+                    if(is_array($meta)) {
+                        foreach($meta as $m) {
+                            update_post_meta($variation_post_id, $m, $metaVal);
+                        }
+                    } else {
+                        update_post_meta($variation_post_id, $meta, $metaVal);
+                    }
+                    if($key === 'quantity') {
+                        $stockStatus = $metaVal > 0 ? 'instock' : 'outofstock';
+                        update_post_meta($variation_post_id, '_stock_status', $stockStatus);
+                        update_post_meta($variation_post_id, '_manage_stock', 'yes');
+                    }
+                }
+            }
+        }
+        $this->removeOldAttributeVariation($post_id, $usedVariations);
+    }
+
+    private function removeVariationAttributes($postId)
+    {
+        $postmeta = $this->db->postmeta;
+        $posts = $this->db->posts;
+        $query = $this->db->prepare(
+            "{$posts} WHERE post_parent=%d AND post_type=%s",
+            $postId, 'product_variation');
+
+        $this->db->query("DELETE FROM {$postmeta}
+            WHERE post_id IN (SELECT ID FROM {$query})");
+
+        $this->db->query("DELETE FROM {$query}");
+
+    }
+
+    private function removeOldAttributeVariation($postId, $variations)
+    {
+        // Remove remaining attributes
+        $posts = $this->db->posts;
+        $postmeta = $this->db->postmeta;
+        $variations = implode(',', $variations);
+        $query = $this->db->prepare(
+            "{$posts} WHERE post_type=%s AND post_parent=%d AND ID NOT IN ({$variations})",
+            'product_variation', $postId);
+
+        $this->db->query(
+            "DELETE FROM {$postmeta} WHERE post_id IN (
+            SELECT ID FROM {$query})");
+        $this->db->query("DELETE FROM {$query}");
+
+    }
+    
     protected function getVar($var, $queries = array())
     {
         $tableName = $this->syncTable;
