@@ -2,7 +2,12 @@
 namespace Bigly\Dropship;
 use Exception;
 use WP_Error;
+
 require('../../../wp-config.php');
+
+class AuthenticationException extends Exception { }
+
+class InvalidRequestException extends Exception { }
 
 /**
 *
@@ -26,6 +31,10 @@ class SyncController
 
     public function __construct($data)
     {
+        if(!$data) {
+            throw new InvalidRequestException("Payload is missing");
+        }
+
     	global $wpdb;
     	$this->data = $data;
     	$this->configs = require('configs/config.php');
@@ -42,13 +51,22 @@ class SyncController
     public function sync()
     {
         // echo $name[0];
-        if(!$this->validateRequest($this->data->token)) {
-            http_response_code(401);
-            return [
-                'status' => 'fail',
-                'message' => 'invalid token'
-            ];
+        if(!isset($this->data->token)) {
+            throw new InvalidRequestException('Token is not defined');
         }
+
+        if(!isset($this->data->type)) {
+            throw new InvalidRequestException('Type is not defined');
+        }
+
+        if(!isset($this->data->action)) {
+            throw new InvalidRequestException("Action is not defined");
+        }
+
+        if(!$this->validateRequest($this->data->token)) {
+            throw new AuthenticationException("Invalid request token");
+        }
+
         set_time_limit(60 * 5);
         switch ($this->data->type) {
            	case 'product':
@@ -67,38 +85,45 @@ class SyncController
         return $token === get_option($tokenKey);
     }
 
-    public function getTermByName($term, $taxonomy)
+    public function getTermByName($term, $taxonomy, $parentId)
     {
         $prefix = $this->db->prefix;
         return $this->db->get_var($this->db->prepare("SELECT terms.term_id FROM {$prefix}terms as terms JOIN
                 {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
-            WHERE terms.name=%s AND taxonomy.taxonomy=%s", $term, $taxonomy));
+            WHERE terms.name=%s AND taxonomy.taxonomy=%s AND taxonomy.parent=%d", $term, $taxonomy, $parentId));
     }
 
     protected function createCategories($categories)
     {
-        $ids = []; $mappings = []; $parentId = 0;
+        $ids = []; $mappings = [];
+
         foreach($categories as $category) {
+            $parentId = 0;
             if (isset($category->parent_id) && $category->parent_id && isset($mappings[$category->parent_id])) {
                 $parentId = $mappings[$category->parent_id];
             }
-            $term = $this->getTermByName($category->name, 'product_cat');
+
+            $term = $this->getTermByName($category->name, 'product_cat', $parentId);
+
             if($term) {
                 $ids[] = (int)$term;
             } else {
                 $term = wp_insert_term($category->name, 'product_cat', [
-                    'description' => $category->description,
+                    'description' => $this->ifset($category->description),
                     'parent' => $parentId
                 ]);
+                
                 if($term instanceof WP_Error) {
                     // throw new Exception((string)$term->get_error_message(), 422);
                     continue;
                 }
+
                 $term = $term['term_id'];
                 $ids[] = (int)$term;
             }
             $mappings[$category->id] = $term;
         }
+
         return $ids;
     }
 
@@ -153,19 +178,28 @@ class SyncController
         if($oldId = $this->isPostExists($product)) {
             $data['ID'] = $oldId;
         }
+
         $data = array_filter($data);
         $post = wp_insert_post($data, true);
         if($post instanceof WP_Error) {
             throw new Exception($post->get_error_message());
         }
+
         $this->insertProductMapping($product, $post);
-        if($this->ifset($product->categories)) {
+
+        if(isset($product->categories)) {
             wp_set_object_terms($post, $this->createCategories($product->categories), 'product_cat');
         }
 
+        if(isset($product->media)) {
+            $this->insertAttachments($product, $post);
+        }
+        
+        if(isset($product->attributes)) {
+            $this->insertAttributes($post, $product);
+        }
+
         $this->insertPostMeta($post, $product);
-        $this->insertAttachments($product, $post);
-        $this->insertAttributes($post, $product);
     }
 
     protected function preparePostMeta($product)
@@ -210,17 +244,24 @@ class SyncController
         if (!$postId) {
             return;
         }
+
         $data = $this->preparePost($product);
         $data['ID'] = $postId;
         $data = array_filter($data);
         $post = wp_update_post($data, true);
 
-        if($this->ifset($product->categories)) {
+        if(isset($product->categories)) {
             wp_set_object_terms($postId, $this->createCategories($product->categories), 'product_cat');
         }
         // Checking if product has already medias then remove it first then insert again.
-        $this->insertAttachments($product, $postId);
-        $this->insertAttributes($postId, $product);
+        if(isset($product->media)) {
+            $this->insertAttachments($product, $postId);
+        }
+
+        if (isset($product->attributes)) {
+            $this->insertAttributes($postId, $product);
+        }
+
         return $this->updatePostMeta($postId, $product);
     }
 
@@ -246,7 +287,8 @@ class SyncController
        $this->insertMapping($product->id, $post, 'product');
     }
 
-    protected function insertMapping($guestId, $hostId, $type) {
+    protected function insertMapping($guestId, $hostId, $type)
+    {
         $tableName = $this->syncTable;
         $exists = $this->getVar('COUNT(*)', [
             'guest_id' => $guestId,
@@ -270,7 +312,8 @@ class SyncController
         }
     }
 
-    protected function deleteMapping($guestId, $type) {
+    protected function deleteMapping($guestId, $type)
+    {
         $tableName = $this->syncTable;
 
         $this->db->delete($tableName, [
@@ -286,9 +329,6 @@ class SyncController
 
     private function insertAttachments($product, $postId)
     {
-        if (!isset($product->media) || !$product->media) {
-            return;
-        }
         $defaultImage = null;
         $attachments = [];
         foreach ($product->media as $media) {
@@ -309,12 +349,15 @@ class SyncController
                 $attachments[] = $attachment;
             }
         }
+
         if(!$defaultImage) {
             $defaultImage = array_shift($attachments);
         }
+
         if($defaultImage) {
             set_post_thumbnail($postId, $defaultImage);
         }
+
         if($attachments) {
             update_post_meta($postId, '_product_image_gallery', implode(',', $attachments));
         }
@@ -322,9 +365,6 @@ class SyncController
 
     protected function insertAttributes($postId, $product)
     {
-        if (!isset($product->attributes) || !$product->attributes) {
-            return;
-        }
         $isVariation = false;
         $simpleAttributes = $this->createSimpleAttributes($product->attributes, $isVariation);
         if($isVariation) {
@@ -493,7 +533,6 @@ class SyncController
             "DELETE FROM {$postmeta} WHERE post_id IN (
             SELECT ID FROM {$query})");
         $this->db->query("DELETE FROM {$query}");
-
     }
     
     protected function getVar($var, $queries = array())
@@ -520,6 +559,18 @@ header("Content-Type: application/json");
 try {
     $json = ( new SyncController($data) )->sync();
     echo json_encode($json);
+} catch( InvalidRequestException $e ) {
+    http_response_code(422);
+    echo json_encode([
+        'status' => 'fail',
+        'message' => $e->getMessage()
+    ]);
+} catch( AuthenticationException $e ) {
+    http_response_code(401);
+    echo json_encode([
+        'status' => 'fail',
+        'message' => $e->getMessage()
+    ]);
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
@@ -529,4 +580,3 @@ try {
     ]);
 }
 exit();
-
