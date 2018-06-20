@@ -7,6 +7,9 @@ use ErrorException;
 error_reporting(E_ALL);
 
 function exceptions_error_handler($severity, $message, $filename, $lineno) {
+    if($filename != __FILE__) {
+        return;
+    }
     if (error_reporting() & $severity) {
         throw new ErrorException($message, 0, $severity, $filename, $lineno);
     }
