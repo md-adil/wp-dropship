@@ -154,15 +154,15 @@ class SyncController
 
     protected function preparePost($product)
     {
-        $categories = null;
-        
-        return [
+        $data = [
             'post_content' => $this->ifset($product->description),
             'post_title' => $this->ifset($product->name),
             'post_excerpt' => $this->ifset($product->excerpt),
             'post_status' => 'publish',
             'post_type' => 'product',
         ];
+
+        return array_filter($data);
     }
 
     protected function isPostExists($product)
@@ -181,12 +181,11 @@ class SyncController
 
     protected function createProduct($product)
     {
-        $data = $this->preparePost($product);
         if($oldId = $this->isPostExists($product)) {
-            $data['ID'] = $oldId;
+            return $this->updateProduct($product, $oldId);
         }
 
-        $data = array_filter($data);
+        $data = $this->preparePost($product);
         $post = wp_insert_post($data, true);
         if($post instanceof WP_Error) {
             throw new Exception($post->get_error_message());
@@ -245,22 +244,23 @@ class SyncController
         }
     }
 
-    protected function updateProduct($product)
+    protected function updateProduct($product, $postId = null)
     {
-        $postId = $this->getPostId($product->id);
+        if(!$postId) {
+            $postId = $this->getPostId($product->id);
+        }
+
         if (!$postId) {
             return;
         }
 
         $data = $this->preparePost($product);
         $data['ID'] = $postId;
-        $data = array_filter($data);
         $post = wp_update_post($data, true);
-
         if(isset($product->categories)) {
             wp_set_object_terms($postId, $this->createCategories($product->categories), 'product_cat');
         }
-        // Checking if product has already medias then remove it first then insert again.
+
         if(isset($product->media)) {
             $this->insertAttachments($product, $postId);
         }
@@ -297,6 +297,7 @@ class SyncController
     protected function insertMapping($guestId, $hostId, $type)
     {
         $tableName = $this->syncTable;
+
         $exists = $this->getVar('COUNT(*)', [
             'guest_id' => $guestId,
             'type' => $type
@@ -322,7 +323,6 @@ class SyncController
     protected function deleteMapping($guestId, $type)
     {
         $tableName = $this->syncTable;
-
         $this->db->delete($tableName, [
             'guest_id' => $guestId,
             'type' => $type
