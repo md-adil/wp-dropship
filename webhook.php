@@ -2,13 +2,22 @@
 namespace Bigly\Dropship;
 use Exception;
 use WP_Error;
+use ErrorException;
+
+error_reporting(E_ALL);
+
+function exceptions_error_handler($severity, $message, $filename, $lineno) {
+    if (error_reporting() & $severity) {
+        throw new ErrorException($message, 0, $severity, $filename, $lineno);
+    }
+}
+
+set_error_handler('Bigly\Dropship\exceptions_error_handler');
 
 require('../../../wp-config.php');
 
 class AuthenticationException extends Exception { }
-
 class InvalidRequestException extends Exception { }
-
 /**
 *
 */
@@ -50,7 +59,6 @@ class SyncController
 
     public function sync()
     {
-        // echo $name[0];
         if(!isset($this->data->token)) {
             throw new InvalidRequestException('Token is not defined');
         }
@@ -173,7 +181,6 @@ class SyncController
 
     protected function createProduct($product)
     {
-        // check if product exists then recreate.
         $data = $this->preparePost($product);
         if($oldId = $this->isPostExists($product)) {
             $data['ID'] = $oldId;
@@ -194,7 +201,7 @@ class SyncController
         if(isset($product->media)) {
             $this->insertAttachments($product, $post);
         }
-        
+
         if(isset($product->attributes)) {
             $this->insertAttributes($post, $product);
         }
@@ -376,7 +383,6 @@ class SyncController
         if($isVariation) {
             wp_set_object_terms($postId, 'variable', 'product_type');
             $variations = $this->createVariationAttributes($postId, $product->attributes);
-            // $this->dd($variations);
             $this->insertVariationAttributes($postId, $variations);
         } else {
             wp_remove_object_terms($postId, 'variable', 'product_type');
@@ -516,7 +522,6 @@ class SyncController
             WHERE post_id IN (SELECT ID FROM {$query})");
 
         $this->db->query("DELETE FROM {$query}");
-
     }
 
     private function removeOldAttributeVariation($postId, $variations)
@@ -571,7 +576,7 @@ try {
         'status' => 'fail',
         'message' => $e->getMessage()
     ]);
-} catch (Exception $e) {
+} catch ( Exception $e ) {
     http_response_code(500);
     echo json_encode([
         'status' => 'fail',
