@@ -460,10 +460,11 @@ class SyncController
         foreach ($variations as $variation) {
             $index = $variation->id;
             if(!isset($variation->price)) {
-                $variation->price = get_post_meta($post_id, '_stock', true);
+                $variation->price = get_post_meta($post_id, '_price', true);
             }
+            
             if(!isset($variation->quantity)) {
-                $variation->quantity = get_post_meta($post_id, '_regular_price', true);
+                $variation->quantity = get_post_meta($post_id, '_stock', true);
             }
 
             $variation_post_id = $this->db->get_var("SELECT ID FROM {$this->db->posts}
@@ -533,6 +534,9 @@ class SyncController
         $posts = $this->db->posts;
         $postmeta = $this->db->postmeta;
         $variations = implode(',', $variations);
+        if(!$variations) {
+            return;
+        }
         $query = $this->db->prepare(
             "{$posts} WHERE post_type=%s AND post_parent=%d AND ID NOT IN ({$variations})",
             'product_variation', $postId);
