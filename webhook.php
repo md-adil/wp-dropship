@@ -342,18 +342,21 @@ class SyncController
         $defaultImage = null;
         $attachments = [];
         foreach ($product->media as $media) {
+            if(!isset($media->large)) {
+                continue;
+            }
             if(!$attachment = $this->getAttachmentId($media->large, $postId)) {
                 $attachment = wp_insert_attachment([
                     'guid' => $media->large,
-                    'post_mime_type' => $media->mime ?: 'image/jpeg',
-                    'post_excerpt' => $media->caption ?: '',
+                    'post_mime_type' => $this->ifset($media->mime, 'image/jpeg'),
+                    'post_excerpt' => $this->ifset($media->caption, ''),
                     'post_content' => 'biglydropship'
                 ], false, $postId, true);
                 if ($attachment instanceof WP_Error) {
                     continue;
                 }
             }
-            if ($media->default) {
+            if ($this->ifset($media->default, false)) {
                 $defaultImage = $attachment;
             } else {
                 $attachments[] = $attachment;
@@ -396,6 +399,10 @@ class SyncController
     private function createSimpleAttributes($attributes, &$isVariation, $attrs = [], $pos = 0)
     {
         foreach ($attributes as $attribute) {
+            if(!isset($attribute->name) || !isset($attribute->value)) {
+                continue;
+            }
+
             $_name = strtolower($attribute->name);
             if(isset($attrs[$_name])) {
                 $attrs[$_name]['value'] = $attrs[$_name]['value'] . '|' . $attribute->value;
@@ -424,6 +431,10 @@ class SyncController
     private function createVariationAttributes($postId, $attributes, $parents = [], $variations = [])
     {
         foreach($attributes as $attribute) {
+            if(!isset($attribute->name) || !isset($attribute->value)) {
+                continue;
+            }
+            
             if(isset($attribute->children)) {
                 array_unshift($parents, $attribute);
                 $variations = $this->createVariationAttributes($postId, $attribute->children, $parents, $variations);
