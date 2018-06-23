@@ -46,7 +46,6 @@ class SyncController
         if(!$data) {
             throw new InvalidRequestException("Payload is missing");
         }
-
     	global $wpdb;
     	$this->data = $data;
     	$this->configs = require('configs/config.php');
@@ -62,6 +61,7 @@ class SyncController
 
     public function sync()
     {
+
         if(!isset($this->data->token)) {
             throw new InvalidRequestException('Token is not defined');
         }

@@ -8,15 +8,15 @@ class ActivationController extends Controller
 {
     public function activate()
     {
-        if ( is_plugin_active( 'woocommerce/woocommerce.php' ) )
-        {  
-               $this->createTables();
+        if ( version_compare(PHP_VERSION, '5.4', '<')) {
+            die('PHP 5.4 is required.');
         }
-        else
-        {
-            $error_message = "This plugin requires WooCommerce plugins to be active!";
-            die($error_message);
-        }   
+
+        if (!is_plugin_active( 'woocommerce/woocommerce.php' )) {
+            die("This plugin requires WooCommerce plugins to be active!");
+        }
+
+        $this->createTables();
     }
 
     public function createTables()
@@ -31,7 +31,7 @@ class ActivationController extends Controller
     private function createSyncMapTable()
     {
         $table = $this->config->get('tables.sync');
-        return "CREATE TABLE {$table} (
+        return "CREATE TABLE IF NOT EXISTS {$table} (
             `host_id` BIGINT UNSIGNED,
             `guest_id` INT UNSIGNED,
             `type` VARCHAR(10),
@@ -41,16 +41,7 @@ class ActivationController extends Controller
 
     public function deactivate()
     {
-        $this->dropTables();
-    }
-
-    public function dropTables()
-    {
-        $this->dropTable($this->config->get('tables.sync'));
-    }
-
-    public function dropTable($table)
-    {
-        $this->db->query("DROP TABLE IF EXISTS {$table}");
+        delete_option($this->config->get('options.access_token'));
+        delete_option($this->config->get('options.webhook_token'));
     }
 }

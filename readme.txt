@@ -4,7 +4,8 @@ Donate link: http://www.bigly.io/
 Tags: Dropship, Dropshipping, BiglyDropship, WooCommerce
 Requires at least: 4.9
 Tested up to: 4.9.4
-Stable tag: 1.0
+Requires PHP: 5.4
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,8 +79,14 @@ http://bigly.io/img/WordPress-plugin-screenshots/9.jpg
 
 == Changelog ==
 
-1.0.0
-Initial release.
+= 1.0.0 =
+* Initial release.
+
+= 1.1 =
+* Fix bug in syncing
+* Load images by it's size
+
+
 
 == Upgrade notice ==
 
