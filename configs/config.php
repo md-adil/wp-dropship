@@ -16,7 +16,7 @@ return [
     ],
 
     'remote' => [
-        'base' => 'http://dropship.bigly.io',
+        'base' => 'http://app.bigly.io',
         'sync' => 'api/sync',
         'webhook' => 'api/webhooks/register',
         'access_token' => 'oauth/token'
