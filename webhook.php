@@ -78,7 +78,7 @@ class SyncController
             throw new AuthenticationException("Invalid request token");
         }
 
-        set_time_limit(60 * 5);
+        // set_time_limit(60 * 5);
         switch ($this->data->type) {
            	case 'product':
            		$this->product($this->data->data, $this->data->action);
