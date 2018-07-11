@@ -96,14 +96,6 @@ class SyncController
         return $token === get_option($tokenKey);
     }
 
-    public function getTermByName($term, $taxonomy, $parentId)
-    {
-        $prefix = $this->db->prefix;
-        return $this->db->get_var($this->db->prepare("SELECT terms.term_id FROM {$prefix}terms as terms JOIN
-                {$prefix}term_taxonomy as taxonomy ON terms.term_id = taxonomy.term_id
-            WHERE terms.name=%s AND taxonomy.taxonomy=%s AND taxonomy.parent=%d", $term, $taxonomy, $parentId));
-    }
-
     protected function createCategories($categories)
     {
         $ids = []; $mappings = [];
@@ -114,25 +106,22 @@ class SyncController
                 $parentId = $mappings[$category->parent_id];
             }
 
-            $term = $this->getTermByName($category->name, 'product_cat', $parentId);
-
-            if($term) {
-                $ids[] = (int)$term;
-            } else {
-                $term = wp_insert_term($category->name, 'product_cat', [
-                    'description' => $this->ifset($category->description),
-                    'parent' => $parentId
-                ]);
-                
-                if($term instanceof WP_Error) {
-                    // throw new Exception((string)$term->get_error_message(), 422);
+            $term = wp_insert_term($category->name, 'product_cat', [
+                'description' => $this->ifset($category->description),
+                'parent' => $parentId
+            ]);
+            
+            if($term instanceof WP_Error) {
+                if(isset($term->error_data['term_exists'])) {
+                    $termId = $term->error_data['term_exists'];
+                } else {
                     continue;
                 }
-
-                $term = $term['term_id'];
-                $ids[] = (int)$term;
+            } else {
+                $termId = $term['term_id'];
             }
-            $mappings[$category->id] = $term;
+            $ids[] = (int)$termId;
+            $mappings[$category->id] = (int)$termId;
         }
 
         return $ids;
@@ -380,15 +369,10 @@ class SyncController
     {
         $isVariation = false;
         $simpleAttributes = $this->createSimpleAttributes($product->attributes, $isVariation);
-        if($isVariation) {
-            foreach($simpleAttributes as $key => $value) {
-                $simpleAttributes[$key]['is_variation'] = 1;
-            }
-        }
         update_post_meta($postId, '_product_attributes', $simpleAttributes);
-        if($isVariation) {
+        $variations = $this->createVariationAttributes($postId, $product->attributes);
+        if(count($variations)) {
             wp_set_object_terms($postId, 'variable', 'product_type');
-            $variations = $this->createVariationAttributes($postId, $product->attributes);
             $this->insertVariationAttributes($postId, $variations);
         } else {
             wp_remove_object_terms($postId, 'variable', 'product_type');
@@ -396,33 +380,37 @@ class SyncController
         }
     }
 
-    private function createSimpleAttributes($attributes, &$isVariation, $attrs = [], $pos = 0)
+    private function createSimpleAttributes($attributes, $attrs = [], $pos = 0)
     {
         foreach ($attributes as $attribute) {
+
             if(!isset($attribute->name) || !isset($attribute->value)) {
                 continue;
+            }
+            $isVariation = 0;
+            if(isset($attribute->is_variation) && $attribute->is_variation) {
+                $isVariation = 1;
             }
 
             $_name = strtolower($attribute->name);
             if(isset($attrs[$_name])) {
                 $attrs[$_name]['value'] = $attrs[$_name]['value'] . '|' . $attribute->value;
+                if($isVariation) {
+                    $attrs[$_name]['is_variation'] = 1;
+                }
             } else {
                 $attrs[$_name] = [
                    'name' => $attribute->name, 
                    'value'=> $attribute->value,
                    'position' => $pos++,
                    'is_visible' => 1,
-                   'is_variation' => 0,
+                   'is_variation' => $isVariation,
                    'is_taxonomy' => 0
                 ];
             }
 
-            if(isset($attribute->price) || isset($attribute->quantity) || isset($attribute->children)) {
-                $isVariation = true;
-            }
-
             if(isset($attribute->children)) {
-                $attrs = $this->createSimpleAttributes($attribute->children, $isVariation, $attrs, $pos);
+                $attrs = $this->createSimpleAttributes($attribute->children, $attrs, $pos);
             }
         }
         return $attrs;
@@ -431,6 +419,9 @@ class SyncController
     private function createVariationAttributes($postId, $attributes, $parents = [], $variations = [])
     {
         foreach($attributes as $attribute) {
+            if(!isset($attribute->is_variation) || !$attribute->is_variation) {
+                continue;
+            }
             if(!isset($attribute->name) || !isset($attribute->value)) {
                 continue;
             }
