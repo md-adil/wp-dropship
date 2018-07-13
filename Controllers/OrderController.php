@@ -26,6 +26,7 @@ class OrderController extends Controller
         if (!$products) {
             return;
         }
+        
         if($guestId = $this->orderExists($order)) {
             return $this->update($order, ['status' =>'placed'], $guestId);
         }
@@ -50,8 +51,6 @@ class OrderController extends Controller
             echo 'Service Error';
             return;
         }
-         //print_r($res);
-         //die("===");
 
         $data = json_decode($res['body']);
 
@@ -59,6 +58,7 @@ class OrderController extends Controller
             echo 'Error get response';
             return;
         }
+
         $orderId = $data->id;
         $this->insertMapping($order, $orderId);
     }
@@ -76,14 +76,25 @@ class OrderController extends Controller
 
         $products = [];
         foreach ($results as $row) {
-            $products[] = [
+            $product = [
                 'id' => $row->product,
                 'name' => $posts[$row->post]['name'],
                 'quantity' => $posts[$row->post]['quantity'],
                 'amount' => $posts[$row->post]['total']
             ];
+
+            if($variationId = $posts[$row->post]->get_variation_id()) {
+                $product['attribute_id'] = $this->getGuestAttributeId($variationId);
+            }
+
+            $products[] = $product;
         }
         return $products;
+    }
+
+    protected function getGuestAttributeId($postId) {
+        $table = $this->db->posts;
+        return $this->db->get_var("SELECT post_content FROM {$table} WHERE ID={$postId}");
     }
 
     protected function update($postId, $data, $orderId = null)
