@@ -73,7 +73,16 @@ add_filter('image_downsize', function($f, $id, $size) {
 // Initialize
 function run_biglydropship()
 {
+    add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'blds_add_action_links');
     require(__DIR__ . '/routes.php');
+}
+
+
+
+function blds_add_action_links($links) {
+   $links[] = '<a href="https://bigly.io" target="_blank">Website</a>';
+   $links[] = '<a href="https://app.bigly.io/login?type=seller" target="_blank">Signup</a>';
+   return $links;
 }
 
 run_biglydropship();
