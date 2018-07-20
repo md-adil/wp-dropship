@@ -150,9 +150,16 @@ class SyncController
             'post_content' => $this->ifset($product->description),
             'post_title' => $this->ifset($product->name),
             'post_excerpt' => $this->ifset($product->excerpt),
-            'post_status' => 'publish',
             'post_type' => 'product',
         ];
+
+        if(isset($product->status)) {
+            if($product->status) {
+                $data['post_status'] = 'publish';
+            } else {
+                $data['post_status'] = 'draft';
+            }
+        }
 
         return array_filter($data);
     }
