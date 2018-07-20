@@ -4,7 +4,7 @@
  * Plugin Name: Bigly
  * Plugin URI: https://bigly.io
  * Description: Sell your product everywhere
- * Version: 1.1
+ * Version: 1.1.1
  * Author: Bigly Technologies PVT. Limited<info@biglytech.net>
  * Author URI github.com/md-adil
  *
