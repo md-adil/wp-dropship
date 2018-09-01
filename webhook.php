@@ -374,17 +374,41 @@ class SyncController
 
     protected function insertAttributes($postId, $product)
     {
-        $isVariation = false;
-        $simpleAttributes = $this->createSimpleAttributes($product->attributes, $isVariation);
-        update_post_meta($postId, '_product_attributes', $simpleAttributes);
-        $variations = $this->createVariationAttributes($postId, $product->attributes);
+        $this->insertSimpleAttributes(
+            $postId,
+            $this->createSimpleAttributes($product->attributes)
+        );
+        
+        $variations = $this->createVariationAttributes($product->attributes);
+        // $this->dd($variations);
         if(count($variations)) {
             wp_set_object_terms($postId, 'variable', 'product_type');
             $this->insertVariationAttributes($postId, $variations);
+            $this->removeAttributeCaches($postId);
         } else {
             wp_remove_object_terms($postId, 'variable', 'product_type');
             $this->removeVariationAttributes($postId);
         }
+    }
+
+    protected function removeAttributeCaches($postId) {
+        $keys = [
+            '_transient_timeout_wc_product_children_',
+            '_transient_wc_product_children_',
+            '_transient_timeout_wc_var_prices_',
+            '_transient_wc_var_prices_'
+        ];
+
+        foreach($keys as $k) {
+            delete_option($k . $postId);
+        }
+    }
+
+    protected function insertSimpleAttributes($postId, $attributes) {
+        foreach ($attributes as $key => $attr) {
+            $attributes[$key]['value'] = implode('|', array_unique($attr['value']));
+        }
+        update_post_meta($postId, '_product_attributes', $attributes);
     }
 
     private function createSimpleAttributes($attributes, $attrs = [], $pos = 0)
@@ -401,14 +425,14 @@ class SyncController
 
             $_name = strtolower($attribute->name);
             if(isset($attrs[$_name])) {
-                $attrs[$_name]['value'] = $attrs[$_name]['value'] . '|' . $attribute->value;
+                $attrs[$_name]['value'][] = $attribute->value;
                 if($isVariation) {
                     $attrs[$_name]['is_variation'] = 1;
                 }
             } else {
                 $attrs[$_name] = [
                    'name' => $attribute->name, 
-                   'value'=> $attribute->value,
+                   'value'=> [$attribute->value],
                    'position' => $pos++,
                    'is_visible' => 1,
                    'is_variation' => $isVariation,
@@ -423,7 +447,7 @@ class SyncController
         return $attrs;
     }
 
-    private function createVariationAttributes($postId, $attributes, $parents = [], $variations = [])
+    private function createVariationAttributes($attributes, $parents = [], $variations = [])
     {
         foreach($attributes as $attribute) {
             if(!isset($attribute->is_variation) || !$attribute->is_variation) {
@@ -435,31 +459,29 @@ class SyncController
             
             if(isset($attribute->children)) {
                 array_unshift($parents, $attribute);
-                $variations = $this->createVariationAttributes($postId, $attribute->children, $parents, $variations);
+                $variations = $this->createVariationAttributes($attribute->children, $parents, $variations);
+                $parents = [];
             } else {
                 $attribute->values = [];
                 $attribute->values[] = [
                     'name' => $attribute->name,
                     'value' => $attribute->value
                 ];
-                if($parents) {
-                    foreach($parents as $parent) {
-                        $attribute->values[] = [
-                            'name' => $parent->name,
-                            'value' => $parent->value
-                        ];
-                        if(!isset($attribute->price) && isset($parent->price)) {
-                            $attribute->price = $parent->price;
-                        }
-                        if(!isset($attribute->quantity) && isset($parent->quantity)) {
-                            $attribute->quantity = $parent->quantity;
-                        }
+                foreach($parents as $parent) {
+                    $attribute->values[] = [
+                        'name' => $parent->name,
+                        'value' => $parent->value
+                    ];
+                    if(!isset($attribute->price) && isset($parent->price)) {
+                        $attribute->price = $parent->price;
+                    }
+                    if(!isset($attribute->quantity) && isset($parent->quantity)) {
+                        $attribute->quantity = $parent->quantity;
                     }
                 }
                 $variations[] = $attribute;
             }
         }
-
         return $variations;
     }
 
