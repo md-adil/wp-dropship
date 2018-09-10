@@ -1,10 +1,10 @@
 === Bigly ===
-Contributors: adil123, nikhiltiwari005, kamnamadhwani, sakshikbc, archanaweb, biglytech
+Contributors: adil123, kamnamadhwani, archanaweb, biglytech
 Donate link: http://www.bigly.io/
 Tags: Dropship, Dropshipping, WooCommerce, Dropship plugin, Bigly dropship plugin, dropship automatic, inventory less plugin, Inventory Source, Dropship Inventory, bigly plugin, free eCommerce plugin, Inventory Syncing plugin, plugin for resellers
 Requires at least: 4.9
 Tested up to: 4.9.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -102,4 +102,8 @@ Initial release.
 
 1.1
 Initial release.
+
+1.1.2
+Attribute and Variations.
+
 
