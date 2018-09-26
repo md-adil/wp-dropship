@@ -157,7 +157,7 @@ class SyncController
             if($product->status) {
                 $data['post_status'] = 'publish';
             } else {
-                $data['post_status'] = 'draft';
+                $data['post_status'] = 'trash';
             }
         }
 
