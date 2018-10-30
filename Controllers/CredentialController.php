@@ -102,13 +102,12 @@ class CredentialController extends Controller
 
     public function registerWebhook()
     {
-        $baseName = basename(dirname(dirname(__FILE__)));
         $tokenUrl = $this->config->get('remote.webhook');
         $token = wp_generate_password(60);
         update_option($this->config->get('options.webhook_token'), $token);
         $res = $this->request->withAuth()->post($tokenUrl, [
             'body' => [
-                'url' => site_url() . "/wp-content/plugins/{$baseName}/webhook.php",
+                'url' => site_url('?webhook-listener=bigly'),
                 'token' => $token,
             ]
         ]);

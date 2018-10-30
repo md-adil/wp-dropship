@@ -4,7 +4,7 @@
  * Plugin Name: Bigly
  * Plugin URI: https://bigly.io
  * Description: Sell your product everywhere
- * Version: 1.1.2
+ * Version: 1.1.4
  * Author: Bigly Technologies PVT. Limited<info@biglytech.net>
  * Author URI github.com/md-adil
  *
@@ -16,6 +16,14 @@
  */
 
 define('BIGLY_DROPSHIP_FILE', __FILE__);
+
+
+add_action('init', 'bigly_register_webhook_listener');
+function bigly_register_webhook_listener() {
+    if(isset($_GET['webhook-listener']) && $_GET['webhook-listener'] == 'bigly') {
+        require(__DIR__ . '/webhook.php');
+    }
+}
 
 spl_autoload_register(function ($class) {
     $prefix = 'Bigly\\Dropship\\';
@@ -76,7 +84,6 @@ function run_biglydropship()
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'blds_add_action_links');
     require(__DIR__ . '/routes.php');
 }
-
 
 
 function blds_add_action_links($links) {

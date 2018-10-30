@@ -17,7 +17,7 @@ function exceptions_error_handler($severity, $message, $filename, $lineno) {
 
 set_error_handler('Bigly\Dropship\exceptions_error_handler');
 
-require('../../../wp-config.php');
+require_once(__DIR__ . '/../../../wp-config.php');
 
 class AuthenticationException extends Exception { }
 class InvalidRequestException extends Exception { }
@@ -48,7 +48,7 @@ class SyncController
         }
     	global $wpdb;
     	$this->data = $data;
-    	$this->configs = require('configs/config.php');
+    	$this->configs = require(__DIR__ . '/configs/config.php');
     	$this->syncTable = $this->configs['tables']['sync'];
     	$this->db = $wpdb;
     }
